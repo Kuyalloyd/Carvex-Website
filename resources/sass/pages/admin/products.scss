@@ -1,0 +1,430 @@
+// Admin Products Styles
+.admin-products {
+    padding: 1.5rem;
+    color: #111827;
+
+    .inventory-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        gap: 1rem;
+
+        @media (max-width: 900px) {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 2.2rem;
+        }
+
+        p {
+            margin: 0.3rem 0 0;
+            color: #64748b;
+            font-size: 1.15rem;
+        }
+
+        .add-part-btn {
+            min-width: 190px;
+            border-radius: 0.75rem;
+        }
+    }
+
+    .inventory-card {
+        background: #f5f6f8;
+        border: 1px solid #dbe1ea;
+        border-radius: 1rem;
+        padding: 1rem;
+    }
+
+    .inventory-status-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1rem;
+        margin-bottom: 0;
+        padding: 0 0.25rem;
+        color: #475569;
+        font-size: 0.98rem;
+
+        .pagination-controls {
+            display: flex;
+            gap: 0.5rem;
+
+            button {
+                border: 1px solid #e5e7eb;
+                background: #ffffff;
+                color: #6b7280;
+                border-radius: 0.75rem;
+                padding: 0.55rem 0.9rem;
+                font-weight: 600;
+                cursor: pointer;
+
+                &:not(:disabled):hover {
+                    background: #f1f5f9;
+                    color: #334155;
+                }
+
+                &:disabled {
+                    opacity: 0.55;
+                    cursor: not-allowed;
+                }
+            }
+        }
+    }
+
+    .inventory-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        margin: 1rem 0 0;
+
+        @media (max-width: 900px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .inventory-summary-card {
+        min-height: 130px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: #ffffff;
+        border: 1px solid #dbe1ea;
+        border-radius: 1rem;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+
+        p {
+            margin: 0;
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        strong {
+            margin-top: 0.45rem;
+            color: #0f172a;
+            font-size: 3rem;
+            line-height: 1;
+            font-weight: 800;
+        }
+
+        &--value strong {
+            color: #111827;
+            font-size: 2.5rem;
+        }
+
+        &--alert strong {
+            color: #f97316;
+        }
+    }
+
+    .inventory-toolbar {
+        display: grid;
+        grid-template-columns: 1fr 220px;
+        gap: 0.8rem;
+        margin-bottom: 0.9rem;
+
+        @media (max-width: 900px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .inventory-search,
+    .inventory-filter {
+        position: relative;
+    }
+
+    .inventory-search-icon,
+    .inventory-filter-icon {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1.1rem;
+        height: 1.1rem;
+        color: #6b7280;
+        pointer-events: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    .inventory-search-icon {
+        left: 0.95rem;
+    }
+
+    .inventory-filter-icon {
+        left: 0.8rem;
+    }
+
+    .inventory-search input,
+    .inventory-filter select,
+    .inventory-filter select.form-control {
+        width: 100%;
+        height: 2.75rem;
+        border-radius: 0.65rem;
+        border: 1px solid #e5e7eb;
+        background: #e5e7eb;
+        color: #1f2937 !important;
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+    .inventory-search input {
+        padding: 0 0.9rem 0 2.8rem;
+
+        &::placeholder {
+            color: #6b7280;
+        }
+    }
+
+    .inventory-filter select {
+        padding: 0 2rem 0 2.45rem;
+        font-weight: 700;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.8rem center;
+        background-size: 1rem;
+    }
+
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: $spacing-lg;
+        z-index: $z-modal;
+    }
+
+    .form-card {
+        width: min(560px, 100%);
+        max-height: min(85vh, 760px);
+        overflow-y: auto;
+        background: #ffffff;
+        border: 1px solid #d9dee7;
+        border-radius: $border-radius-lg;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+        padding: $spacing-xl;
+
+        @include media-md {
+            width: min(520px, 100%);
+            max-height: 88vh;
+            padding: $spacing-lg;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: $spacing-md;
+            margin-bottom: $spacing-lg;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.375rem;
+            color: #0f172a;
+        }
+
+        .modal-close {
+            border: 1px solid #d8dee8;
+            background: #f1f5f9;
+            color: #334155;
+            border-radius: $border-radius;
+            padding: 0.45rem 0.75rem;
+            font-size: $font-size-sm;
+            cursor: pointer;
+
+            &:hover {
+                background: #e2e8f0;
+            }
+        }
+
+        .form-group {
+            margin-bottom: $spacing-md;
+
+            label {
+                display: block;
+                margin-bottom: 0.4rem;
+                color: #0f172a;
+                font-weight: $font-weight-semibold;
+            }
+
+            input,
+            textarea,
+            select {
+                width: 100%;
+                border: 1px solid #cbd5e1;
+                border-radius: 0.7rem;
+                background: #ffffff;
+                color: #111827;
+                padding: 0.8rem 0.9rem;
+                font-size: 0.95rem;
+
+                &::placeholder {
+                    color: #94a3b8;
+                }
+
+                &:focus {
+                    outline: none;
+                    border-color: #1d4ed8;
+                    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+                }
+            }
+
+            textarea {
+                min-height: 110px;
+                resize: vertical;
+            }
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: $spacing-md;
+
+            @media (max-width: 900px) {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-actions {
+            margin-top: $spacing-lg;
+            display: flex;
+            justify-content: flex-end;
+            gap: $spacing-md;
+
+            button {
+                padding: $spacing-sm $spacing-lg;
+            }
+        }
+    }
+
+    .products-table {
+        margin: 0;
+        background: #f5f6f8;
+        border: 1px solid #dbe1ea;
+        border-radius: $border-radius;
+        padding: 0;
+        overflow-x: auto;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+
+            thead {
+                background: #f5f6f8;
+
+                th {
+                    padding: $spacing-md;
+                    text-align: left;
+                    font-weight: $font-weight-semibold;
+                    border-bottom: 1px solid #d8dee8;
+                    color: #111827;
+                }
+            }
+
+            tbody {
+                tr {
+                    border-bottom: 1px solid #e3e7ee;
+
+                    &:hover {
+                        background-color: #eef2f7;
+                    }
+
+                    td {
+                        padding: $spacing-md;
+                        color: #1f2937;
+
+                        .product-thumb {
+                            width: 56px;
+                            height: 56px;
+                            border-radius: 0.7rem;
+                            object-fit: cover;
+                            border: 1px solid #d8dee8;
+                            background: #e5e7eb;
+                        }
+
+                        &.part-name,
+                        .part-name {
+                            font-weight: 700;
+                            color: #0f172a;
+                        }
+
+                        .stock-pill {
+                            display: inline-block;
+                            border-radius: 999px;
+                            padding: 0.18rem 0.65rem;
+                            font-size: 0.85rem;
+                            font-weight: 600;
+                            text-transform: lowercase;
+
+                            &.in-stock {
+                                background: #dcfce7;
+                                color: #15803d;
+                            }
+
+                            &.low-stock {
+                                background: #fef3c7;
+                                color: #b45309;
+                            }
+
+                            &.out-of-stock {
+                                background: #fee2e2;
+                                color: #dc2626;
+                            }
+                        }
+
+                        &.actions {
+                            display: flex;
+                            gap: $spacing-sm;
+                            align-items: center;
+
+                            .icon-btn {
+                                width: 2rem;
+                                height: 2rem;
+                                border: 1px solid #d8dee8;
+                                border-radius: 0.5rem;
+                                background: #ffffff;
+                                color: #1f2937;
+                                display: inline-flex;
+                                align-items: center;
+                                justify-content: center;
+                                cursor: pointer;
+
+                                svg {
+                                    width: 1rem;
+                                    height: 1rem;
+                                }
+
+                                &:hover {
+                                    background: #eef2ff;
+                                }
+
+                                &--danger {
+                                    color: #dc2626;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

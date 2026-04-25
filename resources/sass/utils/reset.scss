@@ -1,0 +1,190 @@
+// ==========================================
+// Reset & Normalize
+// ==========================================
+
+* {
+    box-sizing: border-box;
+}
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: $font-family-base;
+    font-size: $font-size-base;
+    font-weight: $font-weight-normal;
+    line-height: $line-height-base;
+    color: $text-primary;
+    background-color: $bg-primary;
+}
+
+main {
+    display: block;
+}
+
+hr {
+    margin: $spacing-lg 0;
+    border: 0;
+    border-top: $border-width solid $border-color;
+}
+
+a {
+    color: $primary;
+    text-decoration: none;
+    background-color: transparent;
+    @include transition;
+
+    &:not(.btn):hover {
+        color: darken($primary, 15%);
+    }
+
+    &:focus {
+        @include focus-outline;
+    }
+}
+
+abbr[title] {
+    border-bottom: $border-width dotted $border-color;
+    cursor: help;
+    text-decoration: underline dotted;
+}
+
+code, kbd, pre, samp {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-size: 1em;
+}
+
+pre {
+    display: block;
+    overflow: auto;
+    padding: $spacing-md;
+    margin: $spacing-md 0;
+    background-color: $gray-100;
+    border-radius: $border-radius;
+    border: $border-width solid $border-color;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    border-style: none;
+}
+
+button, input, optgroup, select, textarea {
+    font-family: inherit;
+    font-size: 100%;
+    line-height: 1.15;
+    margin: 0;
+}
+
+button, input {
+    overflow: visible;
+}
+
+button, select {
+    text-transform: none;
+}
+
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+    cursor: pointer;
+    appearance: button;
+    -webkit-appearance: button;
+
+    &:disabled {
+        @include disabled;
+    }
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+    box-sizing: border-box;
+    padding: 0;
+}
+
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'],
+input[type='month'] {
+    appearance: listbox;
+    -webkit-appearance: listbox;
+}
+
+textarea {
+    overflow: auto;
+    resize: vertical;
+}
+
+fieldset {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
+legend {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    line-height: inherit;
+    color: inherit;
+    white-space: normal;
+}
+
+progress {
+    vertical-align: baseline;
+}
+
+ol, ul {
+    list-style: none;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+caption {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    color: $text-secondary;
+    text-align: left;
+    caption-side: bottom;
+}
+
+th {
+    text-align: inherit;
+    text-align: -webkit-match-parent;
+}

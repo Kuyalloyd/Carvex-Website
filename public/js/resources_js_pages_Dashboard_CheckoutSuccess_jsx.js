@@ -1,0 +1,22 @@
+"use strict";
+/*
+ * ATTENTION: An "eval-source-map" devtool has been used.
+ * This devtool is neither made for production nor for readable output files.
+ * It uses "eval()" calls to create a separate source file with attached SourceMaps in the browser devtools.
+ * If you are trying to read the output file, select a different devtool (https://webpack.js.org/configuration/devtool/)
+ * or disable the default devtool with "devtool: false".
+ * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
+ */
+(self["webpackChunk"] = self["webpackChunk"] || []).push([["resources_js_pages_Dashboard_CheckoutSuccess_jsx"],{
+
+/***/ "./resources/js/pages/Dashboard/CheckoutSuccess.jsx"
+/*!**********************************************************!*\
+  !*** ./resources/js/pages/Dashboard/CheckoutSuccess.jsx ***!
+  \**********************************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+eval("{__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (/* binding */ CheckoutSuccess)\n/* harmony export */ });\n/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ \"./node_modules/react/index.js\");\n/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-router-dom */ \"./node_modules/react-router/dist/development/chunk-UVKPFVEO.mjs\");\n/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react/jsx-runtime */ \"./node_modules/react/jsx-runtime.js\");\n\n\n\nfunction CheckoutSuccess() {\n  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)(\"div\", {\n    className: \"checkout-success\",\n    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(\"h1\", {\n      children: \"Order Placed Successfully!\"\n    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(\"p\", {\n      children: \"Thank you for your purchase. We'll process your order soon.\"\n    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Link, {\n      to: \"/dashboard/orders\",\n      className: \"btn btn-primary\",\n      children: \"View My Orders\"\n    })]\n  });\n}//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9yZXNvdXJjZXMvanMvcGFnZXMvRGFzaGJvYXJkL0NoZWNrb3V0U3VjY2Vzcy5qc3giLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7QUFBMEI7QUFDYztBQUFBO0FBRXpCLFNBQVNNLGVBQWVBLENBQUEsRUFBRztFQUN0QyxvQkFDSUQsdURBQUE7SUFBS0UsU0FBUyxFQUFDLGtCQUFrQjtJQUFBQyxRQUFBLGdCQUM3Qkwsc0RBQUE7TUFBQUssUUFBQSxFQUFJO0lBQTBCLENBQUksQ0FBQyxlQUNuQ0wsc0RBQUE7TUFBQUssUUFBQSxFQUFHO0lBQTJELENBQUcsQ0FBQyxlQUNsRUwsc0RBQUEsQ0FBQ0Ysa0RBQUk7TUFBQ1EsRUFBRSxFQUFDLG1CQUFtQjtNQUFDRixTQUFTLEVBQUMsaUJBQWlCO01BQUFDLFFBQUEsRUFBQztJQUFjLENBQU0sQ0FBQztFQUFBLENBQzdFLENBQUM7QUFFZCIsInNvdXJjZXMiOlsid2VicGFjazovLy8uL3Jlc291cmNlcy9qcy9wYWdlcy9EYXNoYm9hcmQvQ2hlY2tvdXRTdWNjZXNzLmpzeD85NzM3Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBSZWFjdCBmcm9tICdyZWFjdCc7XHJcbmltcG9ydCB7IExpbmsgfSBmcm9tICdyZWFjdC1yb3V0ZXItZG9tJztcclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIENoZWNrb3V0U3VjY2VzcygpIHtcclxuICAgIHJldHVybiAoXHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJjaGVja291dC1zdWNjZXNzXCI+XHJcbiAgICAgICAgICAgIDxoMT5PcmRlciBQbGFjZWQgU3VjY2Vzc2Z1bGx5ITwvaDE+XHJcbiAgICAgICAgICAgIDxwPlRoYW5rIHlvdSBmb3IgeW91ciBwdXJjaGFzZS4gV2UnbGwgcHJvY2VzcyB5b3VyIG9yZGVyIHNvb24uPC9wPlxyXG4gICAgICAgICAgICA8TGluayB0bz1cIi9kYXNoYm9hcmQvb3JkZXJzXCIgY2xhc3NOYW1lPVwiYnRuIGJ0bi1wcmltYXJ5XCI+VmlldyBNeSBPcmRlcnM8L0xpbms+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICApO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJSZWFjdCIsIkxpbmsiLCJqc3giLCJfanN4IiwianN4cyIsIl9qc3hzIiwiQ2hlY2tvdXRTdWNjZXNzIiwiY2xhc3NOYW1lIiwiY2hpbGRyZW4iLCJ0byJdLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///./resources/js/pages/Dashboard/CheckoutSuccess.jsx\n\n}");
+
+/***/ }
+
+}]);

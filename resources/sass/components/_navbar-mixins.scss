@@ -1,0 +1,450 @@
+// ============================================================================
+// NAVBAR MIXINS - PARTIAL
+// ============================================================================
+// Reusable SCSS mixins for the navbar
+// Import this before navbar.scss
+// ============================================================================
+
+// ============================================================================
+// FLEXBOX UTILITIES
+// ============================================================================
+
+/// Flex container with centered content
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/// Flex container with space-between (justify-content)
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/// Flex container with space-around
+@mixin flex-around {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+/// Flex container with space-evenly
+@mixin flex-evenly {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+/// Flex column layout
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+/// Flex column centered
+@mixin flex-column-center {
+  @include flex-column;
+  align-items: center;
+  justify-content: center;
+}
+
+/// Flex row with gap
+@mixin flex-row-gap($gap: 1rem) {
+  display: flex;
+  align-items: center;
+  gap: $gap;
+}
+
+// ============================================================================
+// TRANSITIONS & ANIMATIONS
+// ============================================================================
+
+/// Smooth transition for one or more properties
+/// @param {string} $property - CSS property to transition (default: all)
+/// @param {string} $duration - Duration of transition (default: $transition-smooth)
+/// @param {string} $timing - Timing function (default: ease)
+@mixin transition($property: all, $duration: 0.2s, $timing: ease) {
+  transition: $property $duration $timing;
+}
+
+/// Multiple transitions
+/// @param {list} $transitions - List of transitions
+@mixin transitions($transitions...) {
+  @if length($transitions) == 1 {
+    transition: nth($transitions, 1);
+  } @else {
+    transition: $transitions;
+  }
+}
+
+/// Smooth color transition
+@mixin transition-color($duration: 0.2s) {
+  @include transition(color, $duration);
+}
+
+/// Smooth background transition
+@mixin transition-background($duration: 0.2s) {
+  @include transition(background, background-color, $duration);
+}
+
+/// Smooth transform transition
+@mixin transition-transform($duration: 0.2s) {
+  @include transition(transform, $duration);
+}
+
+/// Smooth shadow transition
+@mixin transition-shadow($duration: 0.2s) {
+  @include transition(box-shadow, $duration);
+}
+
+/// All properties smooth transition (common case)
+@mixin transition-all($duration: 0.2s) {
+  @include transition(all, $duration);
+}
+
+// ============================================================================
+// LINK STYLING
+// ============================================================================
+
+/// Base link styles (removes decoration, sets color)
+@mixin link-base($color: inherit) {
+  text-decoration: none;
+  color: $color;
+  cursor: pointer;
+}
+
+/// Link with default state
+@mixin link-state($color: inherit, $hover-color: currentColor) {
+  @include link-base($color);
+  @include transition-color;
+
+  &:hover {
+    color: $hover-color;
+  }
+}
+
+/// Active link with underline decoration
+@mixin active-link($color: #2563eb, $border-color: #2563eb, $thickness: 2px) {
+  color: $color;
+  border-bottom: $thickness solid $border-color;
+}
+
+/// Link with underline animation on hover
+@mixin link-underline-hover($color: #2563eb) {
+  position: relative;
+  @include link-state;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: $color;
+    transform: scaleX(0);
+    transform-origin: center;
+    @include transition-transform;
+  }
+
+  &:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+// ============================================================================
+// BUTTON STYLES
+// ============================================================================
+
+/// Button base styles
+@mixin button-base($bg: #2563eb, $color: white, $padding: 0.5rem 1rem, $radius: 0.5rem) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $padding;
+  background: $bg;
+  color: $color;
+  border: none;
+  border-radius: $radius;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  @include transition-all;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/// Button with hover state
+@mixin button-hover($bg: #2563eb, $color: white, $hover-bg: #1e40af, $hover-color: white) {
+  background: $bg;
+  color: $color;
+  @include transition-all;
+
+  &:hover {
+    background: $hover-bg;
+    color: $hover-color;
+  }
+}
+
+// ============================================================================
+// HOVER EFFECTS
+// ============================================================================
+
+/// Simple hover state with background and color change
+/// @param {color} $bg - Hover background color
+/// @param {color} $color - Hover text color
+/// @param {boolean} $shadow - Add box shadow on hover
+@mixin hover-state($bg: transparent, $color: currentColor, $shadow: false) {
+  @include transition-all;
+
+  &:hover {
+    background: $bg;
+    color: $color;
+
+    @if $shadow {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+/// Hover lift effect (translateY)
+/// @param {string} $distance - Distance to lift (default: -2px means up)
+@mixin hover-lift($distance: -2px) {
+  @include transition-transform;
+
+  &:hover {
+    transform: translateY($distance);
+  }
+}
+
+/// Hover scale effect
+/// @param {number} $scale - Scale factor (default: 1.05)
+@mixin hover-scale($scale: 1.05) {
+  @include transition-transform;
+
+  &:hover {
+    transform: scale($scale);
+  }
+}
+
+/// Hover shadow effect
+/// @param {string} $shadow - Shadow CSS (default: lg)
+@mixin hover-shadow($shadow: 0 10px 15px rgba(0, 0, 0, 0.1)) {
+  @include transition-shadow;
+
+  &:hover {
+    box-shadow: $shadow;
+  }
+}
+
+/// Combined hover effects
+@mixin hover-interactive($bg: #f0f9ff, $color: #2563eb, $lift: -2px, $shadow: true) {
+  @include transition-all;
+
+  &:hover {
+    background: $bg;
+    color: $color;
+    transform: translateY($lift);
+
+    @if $shadow {
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15);
+    }
+  }
+}
+
+// ============================================================================
+// TEXT & TYPOGRAPHY UTILITIES
+// ============================================================================
+
+/// Text truncation (single line)
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/// Text truncation (multi-line with clamp)
+/// @param {number} $lines - Number of lines to show
+@mixin text-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/// Text color transition
+/// @param {color} $color - Base color
+/// @param {color} $hover-color - Hover color
+@mixin text-hover($color, $hover-color) {
+  color: $color;
+  @include transition-color;
+
+  &:hover {
+    color: $hover-color;
+  }
+}
+
+// ============================================================================
+// RESPONSIVE UTILITIES
+// ============================================================================
+
+/// Mobile-first media query
+/// @param {string} $breakpoint - Breakpoint name (sm, md, lg, xl, 2xl) or pixel value
+@mixin media($breakpoint) {
+  @if $breakpoint == 'sm' {
+    @media (max-width: 480px) {
+      @content;
+    }
+  } @else if $breakpoint == 'md' {
+    @media (max-width: 768px) {
+      @content;
+    }
+  } @else if $breakpoint == 'lg' {
+    @media (max-width: 1024px) {
+      @content;
+    }
+  } @else if $breakpoint == 'xl' {
+    @media (max-width: 1280px) {
+      @content;
+    }
+  } @else if $breakpoint == '2xl' {
+    @media (max-width: 1536px) {
+      @content;
+    }
+  } @else {
+    @media (max-width: $breakpoint) {
+      @content;
+    }
+  }
+}
+
+/// Mobile-first min-width media query (for showing)
+/// @param {string} $breakpoint - Breakpoint name
+@mixin media-up($breakpoint) {
+  @if $breakpoint == 'sm' {
+    @media (min-width: 480px) {
+      @content;
+    }
+  } @else if $breakpoint == 'md' {
+    @media (min-width: 768px) {
+      @content;
+    }
+  } @else if $breakpoint == 'lg' {
+    @media (min-width: 1024px) {
+      @content;
+    }
+  } @else if $breakpoint == 'xl' {
+    @media (min-width: 1280px) {
+      @content;
+    }
+  } @else if $breakpoint == '2xl' {
+    @media (min-width: 1536px) {
+      @content;
+    }
+  } @else {
+    @media (min-width: $breakpoint) {
+      @content;
+    }
+  }
+}
+
+/// Touch device specific styles
+@mixin touch-device {
+  @media (hover: none) and (pointer: coarse) {
+    @content;
+  }
+}
+
+/// Hover-capable device specific styles
+@mixin hover-device {
+  @media (hover: hover) and (pointer: fine) {
+    @content;
+  }
+}
+
+// ============================================================================
+// ACCESSIBILITY
+// ============================================================================
+
+/// Focus visible styling (keyboard navigation)
+@mixin focus-visible($color: #2563eb, $offset: 2px) {
+  outline: 2px solid $color;
+  outline-offset: $offset;
+}
+
+/// Reduce motion for users preferring reduced motion
+@mixin prefers-reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/// Dark mode support
+@mixin dark-mode {
+  @media (prefers-color-scheme: dark) {
+    @content;
+  }
+}
+
+// ============================================================================
+// GRADIENT UTILITIES
+// ============================================================================
+
+/// Linear gradient background
+@mixin gradient-linear($angle: 90deg, $colors...) {
+  background: linear-gradient($angle, $colors);
+}
+
+/// Radial gradient background
+@mixin gradient-radial($colors...) {
+  background: radial-gradient(circle, $colors);
+}
+
+// ============================================================================
+// POSITIONING UTILITIES
+// ============================================================================
+
+/// Absolute center positioning
+@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/// Pseudo-element positioning
+@mixin pseudo($display: block, $position: absolute, $width: 100%, $height: 100%) {
+  content: '';
+  display: $display;
+  position: $position;
+  width: $width;
+  height: $height;
+}
+
+// ============================================================================
+// CLEARFIX
+// ============================================================================
+
+/// Clearfix for floats (legacy)
+@mixin clearfix {
+  &::after {
+    @include pseudo;
+    clear: both;
+  }
+}
+
+// ============================================================================
+// END OF NAVBAR MIXINS
+// ============================================================================

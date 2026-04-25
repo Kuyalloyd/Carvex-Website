@@ -1,0 +1,153 @@
+// ==========================================
+// SCSS Mixins
+// ==========================================
+
+// Responsive Breakpoints
+@mixin media-sm {
+    @media (min-width: $breakpoint-sm) {
+        @content;
+    }
+}
+
+@mixin media-md {
+    @media (min-width: $breakpoint-md) {
+        @content;
+    }
+}
+
+@mixin media-lg {
+    @media (min-width: $breakpoint-lg) {
+        @content;
+    }
+}
+
+@mixin media-xl {
+    @media (min-width: $breakpoint-xl) {
+        @content;
+    }
+}
+
+// Flexbox
+@mixin flex($direction: row, $justify: center, $align: center) {
+    display: flex;
+    flex-direction: $direction;
+    justify-content: $justify;
+    align-items: $align;
+}
+
+@mixin flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@mixin flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+// Grid
+@mixin grid($columns: 1, $gap: $spacing-md) {
+    display: grid;
+    grid-template-columns: repeat($columns, 1fr);
+    gap: $gap;
+}
+
+// Text Truncate
+@mixin truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@mixin truncate-lines($lines: 2) {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+// Transitions
+@mixin transition($properties: all, $duration: 0.3s, $timing: ease, $delay: 0s) {
+    transition: $properties $duration $timing $delay;
+}
+
+// Opacity Hover
+@mixin hover-opacity($opacity: 0.8) {
+    transition: opacity 0.3s ease;
+    &:hover {
+        opacity: $opacity;
+    }
+}
+
+// Focus Outline
+@mixin focus-outline($color: $primary, $width: 2px) {
+    outline: $width solid $color;
+    outline-offset: 2px;
+}
+
+// Absolute Centering
+@mixin absolute-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+// Absolute Cover
+@mixin absolute-cover {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+// Text Shadow
+@mixin text-shadow($shadow: 0 2px 4px rgba(0, 0, 0, 0.1)) {
+    text-shadow: $shadow;
+}
+
+// Box Shadow
+@mixin box-shadow($shadow: $box-shadow) {
+    box-shadow: $shadow;
+}
+
+// Scrollbar
+@mixin scrollbar($width: 8px, $track: $gray-200, $thumb: $gray-400) {
+    &::-webkit-scrollbar {
+        width: $width;
+    }
+    &::-webkit-scrollbar-track {
+        background: $track;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: $thumb;
+        border-radius: 4px;
+        &:hover {
+            background: darken($thumb, 10%);
+        }
+    }
+}
+
+// Gradient
+@mixin gradient($start, $end, $direction: to right) {
+    background: linear-gradient($direction, $start, $end);
+}
+
+// Disabled State
+@mixin disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+// Clearfix
+@mixin clearfix {
+    &::after {
+        content: '';
+        display: table;
+        clear: both;
+    }
+}

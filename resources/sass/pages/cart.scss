@@ -1,0 +1,179 @@
+// Cart Page Styles
+.cart-page {
+    padding: $spacing-2xl 0;
+
+    .page-header {
+        margin-bottom: $spacing-2xl;
+
+        h1 {
+            margin-bottom: $spacing-md;
+        }
+    }
+
+    .cart-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: $spacing-2xl;
+
+        @include media-md {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .cart-items {
+        background-color: $white;
+        border: $border-width solid $border-color;
+        border-radius: $border-radius;
+        padding: $spacing-lg;
+
+        .cart-item {
+            display: flex;
+            gap: $spacing-lg;
+            padding: $spacing-lg;
+            border-bottom: $border-width solid $border-color;
+
+            &:last-child {
+                border-bottom: 0;
+            }
+
+            @include media-md {
+                flex-direction: column;
+            }
+
+            .item-image {
+                width: 100px;
+                height: 100px;
+                background-color: $gray-100;
+                border-radius: $border-radius;
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2.5rem;
+
+                img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: $border-radius;
+                }
+            }
+
+            .item-info {
+                flex: 1;
+
+                h3 {
+                    margin-bottom: $spacing-sm;
+                }
+
+                .item-brand {
+                    color: $text-secondary;
+                    font-size: $font-size-sm;
+                    margin-bottom: $spacing-md;
+                }
+            }
+
+            .item-quantity {
+                display: flex;
+                align-items: center;
+                gap: $spacing-sm;
+
+                button {
+                    background-color: $light;
+                    border: $border-width solid $border-color;
+                    padding: 0.25rem 0.5rem;
+                    cursor: pointer;
+                    border-radius: $border-radius;
+
+                    &:hover {
+                        background-color: $gray-200;
+                    }
+                }
+
+                input {
+                    width: 50px;
+                    text-align: center;
+                    border: 0;
+
+                    &:focus {
+                        outline: 0;
+                    }
+                }
+            }
+
+            .item-price {
+                text-align: right;
+
+                .unit-price {
+                    font-size: $font-size-sm;
+                    color: $text-secondary;
+                    margin-bottom: $spacing-sm;
+                }
+
+                .total {
+                    font-size: $font-size-lg;
+                    font-weight: $font-weight-bold;
+                    color: $primary;
+                }
+            }
+
+            .remove-btn {
+                background-color: transparent;
+                border: 0;
+                color: $danger;
+                cursor: pointer;
+                font-size: $font-size-lg;
+
+                &:hover {
+                    opacity: 0.7;
+                }
+            }
+        }
+    }
+
+    .cart-summary {
+        background-color: $light;
+        border: $border-width solid $border-color;
+        border-radius: $border-radius;
+        padding: $spacing-lg;
+        height: fit-content;
+        position: sticky;
+        top: 100px;
+
+        h2 {
+            margin-bottom: $spacing-lg;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: $spacing-md;
+            font-size: $font-size-base;
+
+            &.total {
+                border-top: $border-width solid $border-color;
+                padding-top: $spacing-md;
+                margin-top: $spacing-md;
+                font-size: $font-size-lg;
+                font-weight: $font-weight-bold;
+                color: $primary;
+            }
+        }
+
+        .checkout-btn {
+            width: 100%;
+            margin-top: $spacing-lg;
+        }
+
+        .continue-shopping {
+            display: block;
+            text-align: center;
+            margin-top: $spacing-md;
+            color: $primary;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+}

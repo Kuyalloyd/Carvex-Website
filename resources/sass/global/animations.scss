@@ -1,0 +1,567 @@
+// ==========================================
+// Global Animations & Effects
+// ==========================================
+
+// ==========================================
+// Keyframe Animations
+// ==========================================
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-2px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(2px);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(255, 28, 28, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(255, 28, 28, 0.6);
+    }
+}
+
+// ==========================================
+// Button Animations & Effects
+// ==========================================
+
+button,
+.btn,
+a.btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+}
+
+// Ripple effect on button click
+button:not(:disabled),
+.btn:not(:disabled),
+a.btn:not(:disabled) {
+    &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+
+    &:active::before {
+        animation: ripple 0.6s ease-out;
+    }
+}
+
+@keyframes ripple {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 300px;
+        height: 300px;
+        opacity: 0;
+    }
+}
+
+// ==========================================
+// Link Animations
+// ==========================================
+
+a:not(.btn) {
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+// ==========================================
+// Form Input Animations
+// ==========================================
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+textarea,
+select {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+
+    &:hover:not(:disabled) {
+        border-color: rgba(255, 28, 28, 0.5);
+    }
+
+    &:focus {
+        outline: none;
+        border-color: #ff1c1c;
+        box-shadow: 0 0 0 3px rgba(255, 28, 28, 0.1);
+        transform: translateY(-2px);
+    }
+
+    &:disabled {
+        background-color: #f3f4f6;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+}
+
+// Focus visible for accessibility
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 2px solid #ff1c1c;
+    outline-offset: 2px;
+}
+
+// ==========================================
+// Checkbox & Radio Animations
+// ==========================================
+
+input[type="checkbox"],
+input[type="radio"] {
+    &:hover:not(:disabled) {
+        ~ label {
+            color: #111827;
+        }
+    }
+
+    &:focus-visible {
+        outline: 2px solid #ff1c1c;
+        outline-offset: 2px;
+    }
+}
+
+// ==========================================
+// Card & Container Animations
+// ==========================================
+
+.product-card,
+.order-card,
+.stat-card,
+.admin-stat-card,
+.admin-section,
+[class*="card"] {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+}
+
+// ==========================================
+// Modal & Dialog Animations
+// ==========================================
+
+.modal,
+.dialog,
+.auth-modal,
+[class*="modal"] {
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.auth-page {
+    animation: fadeIn 0.4s ease;
+}
+
+// ==========================================
+// Loading & Spinner Animations
+// ==========================================
+
+.loading-spinner,
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading,
+.is-loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+// ==========================================
+// Alert & Toast Animations
+// ==========================================
+
+.alert,
+.toast,
+[class*="alert"],
+[class*="toast"] {
+    animation: slideInUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &.dismissing {
+        animation: slideInUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) reverse;
+    }
+}
+
+// ==========================================
+// Dropdown & Menu Animations
+// ==========================================
+
+.dropdown-menu,
+.menu,
+[class*="dropdown"],
+[class*="menu"] {
+    &.show,
+    &.open {
+        animation: slideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+}
+
+// ==========================================
+// Header & Navigation Animations
+// ==========================================
+
+header,
+nav,
+.navbar {
+    animation: slideDown 0.4s ease 0.1s both;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+nav a,
+.nav-link {
+    transition: all 0.3s ease;
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background-color: #ff1c1c;
+        transition: width 0.3s ease;
+    }
+
+    &:hover::after {
+        width: 100%;
+    }
+}
+
+// ==========================================
+// Image & Picture Animations
+// ==========================================
+
+img {
+    transition: transform 0.3s ease, filter 0.3s ease;
+
+    &:hover {
+        filter: brightness(1.05);
+    }
+}
+
+.product-image,
+.hero-image {
+    overflow: hidden;
+
+    img {
+        &:hover {
+            transform: scale(1.05);
+        }
+    }
+}
+
+// ==========================================
+// Badge & Label Animations
+// ==========================================
+
+.badge,
+.label,
+[class*="badge"],
+[class*="label"] {
+    animation: fadeIn 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+// ==========================================
+// Tab Animations
+// ==========================================
+
+.tabs,
+[class*="tabs"] {
+    .tab-content {
+        animation: fadeIn 0.3s ease;
+    }
+}
+
+// ==========================================
+// Text & Content Animations
+// ==========================================
+
+h1, h2, h3, h4, h5, h6 {
+    animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+p {
+    animation: slideInRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+// ==========================================
+// Price & Value Change Animations
+// ==========================================
+
+.price,
+.value,
+[class*="price"],
+[class*="value"] {
+    transition: all 0.3s ease;
+
+    &.increased {
+        color: #38a169;
+        animation: pulse 0.6s ease;
+    }
+
+    &.decreased {
+        color: #dc2626;
+        animation: shake 0.4s ease;
+    }
+}
+
+// ==========================================
+// Section & Page Animations
+// ==========================================
+
+section {
+    animation: fadeIn 0.5s ease 0.1s both;
+}
+
+main {
+    animation: fadeIn 0.4s ease;
+}
+
+// ==========================================
+// Error State Animations
+// ==========================================
+
+.error,
+.is-error,
+[class*="error"] {
+    animation: shake 0.4s ease;
+
+    input,
+    textarea,
+    select {
+        border-color: #dc2626 !important;
+        animation: glow 1s ease infinite;
+    }
+}
+
+// ==========================================
+// Success State Animations
+// ==========================================
+
+.success,
+.is-success,
+[class*="success"] {
+    animation: slideInUp 0.3s ease;
+
+    input,
+    textarea,
+    select {
+        border-color: #38a169 !important;
+    }
+}
+
+// ==========================================
+// Transition Utilities
+// ==========================================
+
+.transition-fast {
+    transition: all 0.15s ease;
+}
+
+.transition-normal {
+    transition: all 0.3s ease;
+}
+
+.transition-slow {
+    transition: all 0.5s ease;
+}
+
+// ==========================================
+// Custom Hover Effects
+// ==========================================
+
+.hover-lift {
+    &:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+}
+
+.hover-glow {
+    &:hover {
+        box-shadow: 0 0 20px rgba(255, 28, 28, 0.4);
+    }
+}
+
+.hover-scale {
+    &:hover {
+        transform: scale(1.05);
+    }
+}
+
+.hover-darken {
+    &:hover {
+        filter: brightness(0.95);
+    }
+}
+
+.hover-brighten {
+    &:hover {
+        filter: brightness(1.1);
+    }
+}
+
+// ==========================================
+// Click/Active State Effects
+// ==========================================
+
+.active,
+.is-active {
+    animation: scaleIn 0.2s ease;
+}
+
+// ==========================================
+// Smooth Scroll Behavior
+// ==========================================
+
+html {
+    scroll-behavior: smooth;
+}
+
+// ==========================================
+// Motion Reduction for Accessibility
+// ==========================================
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

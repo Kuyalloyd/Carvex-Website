@@ -1,0 +1,1 @@
+{"version":3,"file":"js/967.js","mappings":"sHAMA,QAJoB,WAChB,OAAO,IACX,C","sources":["webpack:///./resources/js/pages/OrderDetail.jsx"],"sourcesContent":["import React from 'react';\n\nconst OrderDetail = () => {\n    return null;\n};\n\nexport default OrderDetail;"],"names":[],"sourceRoot":""}

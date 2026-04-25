@@ -1,0 +1,1 @@
+{"version":3,"file":"js/621.js","mappings":"sHAMA,QAJe,WACX,OAAO,IACX,C","sources":["webpack:///./resources/js/pages/Orders.jsx"],"sourcesContent":["import React from 'react';\n\nconst Orders = () => {\n    return null;\n};\n\nexport default Orders;"],"names":[],"sourceRoot":""}

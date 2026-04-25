@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "resources/js/context/AuthContext.tsx",
+    "resources/js/context/CartContext.tsx",
+    "resources/js/types/index.ts"
+  ]
+}

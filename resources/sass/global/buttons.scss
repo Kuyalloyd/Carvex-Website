@@ -1,0 +1,266 @@
+// ==========================================
+// Button Styles
+// ==========================================
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.3);
+    }
+
+    &:disabled, &.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    &:hover:not(:disabled) {
+        transform: translateY(-2px);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+}
+
+// Button Sizes
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.btn-xs {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    min-height: 1.8rem;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+}
+
+.btn-block {
+    display: flex;
+    width: 100%;
+}
+
+// Primary Button (Brand Color)
+.btn-primary {
+    color: #ffffff;
+    background: linear-gradient(135deg, #ff1c1c, #d80000);
+    border-color: #ff1c1c;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #d80000, #b00000);
+        border-color: #d80000;
+        color: #ffffff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active:not(:disabled) {
+        background: linear-gradient(135deg, #b00000, #8b0000);
+        color: #ffffff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+}
+
+// Secondary Button
+.btn-secondary {
+    color: #ffffff;
+    background: #374151;
+    border-color: #4b5563;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+
+    &:hover:not(:disabled) {
+        background: #4b5563;
+        border-color: #6b7280;
+        color: #ffffff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active:not(:disabled) {
+        background: #6b7280;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+}
+
+// Outline Button
+.btn-outline {
+    color: #3182ce;
+    background: transparent;
+    border-color: #d8dee8;
+
+    &:hover:not(:disabled) {
+        background: #f8fafc;
+        border-color: #3182ce;
+        color: #3182ce;
+    }
+
+    &:active:not(:disabled) {
+        background: #e0e7ff;
+        border-color: #3182ce;
+    }
+}
+
+// Outline Primary Button
+.btn-outline-primary {
+    color: #ff1c1c;
+    background: transparent;
+    border-color: #3182ce;
+
+    &:hover:not(:disabled) {
+        background: #3182ce;
+        color: #ffffff;
+        border-color: #3182ce;
+    }
+
+    &:active:not(:disabled) {
+        background: #2c5282;
+        border-color: #2c5282;
+    }
+}
+
+// Outline Light Button (for dark backgrounds)
+.btn-outline-light {
+    color: #ffffff;
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.8);
+
+    &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #ffffff;
+        color: #ffffff;
+    }
+
+    &:active:not(:disabled) {
+        background: rgba(255, 255, 255, 0.2);
+    }
+}
+
+// Success Button
+.btn-success {
+    color: #ffffff;
+    background: linear-gradient(135deg, #38a169, #48bb78);
+    border-color: #38a169;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #2f855a, #38a169);
+        border-color: #2f855a;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+}
+
+// Warning Button
+.btn-warning {
+    color: #ffffff;
+    background: linear-gradient(135deg, #d69e2e, #ed8936);
+    border-color: #d69e2e;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #b7791f, #d69e2e);
+        border-color: #b7791f;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+}
+
+// Danger Button
+.btn-danger {
+    color: #ffffff;
+    background: linear-gradient(135deg, #e53e3e, #fc8181);
+    border-color: #e53e3e;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #c53030, #e53e3e);
+        border-color: #c53030;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+}
+
+// Link Button
+.btn-link {
+    color: #4a5568;
+    background: transparent;
+    border-color: transparent;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+
+    &:hover:not(:disabled) {
+        color: #3182ce;
+        background: rgba(49, 130, 206, 0.05);
+        border-color: transparent;
+        transform: none;
+    }
+
+    &:active:not(:disabled) {
+        background: rgba(49, 130, 206, 0.1);
+    }
+}
+
+// Icon Button
+.btn-icon {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #1a202c;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+
+    &:hover:not(:disabled) {
+        border-color: #3182ce;
+        color: #3182ce;
+        background: rgba(49, 130, 206, 0.05);
+    }
+}
+
+// Loading State
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+
+    &::after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: 50%;
+        left: 50%;
+        margin-left: -8px;
+        margin-top: -8px;
+        border: 2px solid transparent;
+        border-top: 2px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

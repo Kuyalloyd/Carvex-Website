@@ -1,0 +1,37 @@
+{
+    "private": true,
+    "scripts": {
+        "dev": "npm run development",
+        "development": "set CI=1&& mix --no-progress",
+        "watch": "set CI=1&& mix watch --no-progress",
+        "watch-poll": "set CI=1&& mix watch --no-progress -- --watch-options-poll=1000",
+        "hot": "set CI=1&& mix watch --hot --no-progress",
+        "prod": "npm run production",
+        "production": "set CI=1&& mix --production",
+        "typecheck": "tsc --noEmit -p tsconfig.typecheck.json"
+    },
+    "devDependencies": {
+        "@babel/preset-react": "^7.28.5",
+        "@babel/preset-typescript": "^7.28.5",
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
+        "axios": "^0.25.0",
+        "css-loader": "^7.1.4",
+        "laravel-mix": "^6.0.6",
+        "lodash": "^4.17.19",
+        "postcss": "^8.1.14",
+        "resolve-url-loader": "^5.0.0",
+        "sass": "^1.98.0",
+        "sass-loader": "^12.6.0",
+        "style-loader": "^4.0.0",
+        "typescript": "5.7.3"
+    },
+    "dependencies": {
+        "leaflet": "^1.9.4",
+        "lucide-react": "^1.8.0",
+        "react": "^19.2.4",
+        "react-dom": "^19.2.4",
+        "react-leaflet": "^4.2.1",
+        "react-router-dom": "^7.13.2"
+    }
+}

@@ -1,0 +1,21 @@
+// Layout Component Styles
+.layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: clip;
+
+    > main {
+        flex: 1;
+    }
+}
+
+main {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    color: $text-primary;
+}
+
+html,
+body {
+    overflow-x: clip;
+}

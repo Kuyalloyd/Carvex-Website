@@ -1,0 +1,269 @@
+// Admin Orders Styles
+.admin-orders {
+    padding: 1.5rem;
+    color: #111827;
+
+    .order-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+
+        @media (max-width: 900px) {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 2.2rem;
+        }
+
+        p {
+            margin: 0.35rem 0 0;
+            color: #64748b;
+            font-size: 1.05rem;
+        }
+    }
+
+    .order-export-btn {
+        min-width: 160px;
+        border-radius: 0.75rem;
+        background: #ffffff;
+        color: #111827;
+        border: 1px solid #d8dee8;
+
+        &:hover {
+            background: #f8fafc;
+        }
+    }
+
+    .order-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+
+        @media (max-width: 1200px) {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        @media (max-width: 900px) {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        @media (max-width: 640px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .order-summary-card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-height: 96px;
+        padding: 1rem;
+        background: #ffffff;
+        border: 1px solid #dbe1ea;
+        border-radius: 1rem;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+
+        .summary-accent {
+            width: 0.45rem;
+            height: 4.2rem;
+            border-radius: 999px;
+            background: #3b82f6;
+            flex-shrink: 0;
+        }
+
+        p {
+            margin: 0;
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        strong {
+            display: block;
+            margin-top: 0.2rem;
+            color: #111827;
+            font-size: 2rem;
+            line-height: 1;
+        }
+
+        &--slate .summary-accent {
+            background: #64748b;
+        }
+
+        &--amber .summary-accent {
+            background: #f59e0b;
+        }
+
+        &--indigo .summary-accent {
+            background: #3b82f6;
+        }
+
+        &--green .summary-accent {
+            background: #22c55e;
+        }
+    }
+
+    .orders-panel {
+        background: #ffffff;
+        border: 1px solid #dbe1ea;
+        border-radius: 1rem;
+        padding: 1rem;
+    }
+
+    .orders-toolbar {
+        display: grid;
+        grid-template-columns: 1fr 220px;
+        gap: 0.9rem;
+        margin-bottom: 0.9rem;
+
+        @media (max-width: 900px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .orders-search input,
+    .orders-filter select,
+    .orders-filter select.form-control {
+        width: 100%;
+        height: 2.6rem;
+        border-radius: 0.7rem;
+        border: 1px solid #d8dee8;
+        background: #eceef2;
+        color: #1e293b !important;
+        padding: 0 0.85rem;
+        font-size: 1rem;
+    }
+
+    .orders-table {
+        overflow-x: auto;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+
+            thead {
+                background: #ffffff;
+
+                th {
+                    padding: 0.95rem 0.85rem;
+                    text-align: left;
+                    color: #111827;
+                    font-weight: 700;
+                    border-bottom: 1px solid #d8dee8;
+                }
+            }
+
+            tbody {
+                tr {
+                    border-bottom: 1px solid #e5e7eb;
+
+                    &:hover {
+                        background: #f8fafc;
+                    }
+
+                    td {
+                        padding: 0.95rem 0.85rem;
+                        color: #1f2937;
+
+                        &.order-id,
+                        &.order-total {
+                            font-weight: 700;
+                            color: #0f172a;
+                        }
+
+                        &.order-parts {
+                            color: #64748b;
+                        }
+
+                        .order-status-badge {
+                            display: inline-flex;
+                            align-items: center;
+                            padding: 0.25rem 0.7rem;
+                            border-radius: 999px;
+                            font-size: 0.84rem;
+                            font-weight: 600;
+
+                            &--delivered {
+                                background: #dcfce7;
+                                color: #15803d;
+                            }
+
+                            &--shipped {
+                                background: #dbeafe;
+                                color: #2563eb;
+                            }
+
+                            &--processing {
+                                background: #fef3c7;
+                                color: #b45309;
+                            }
+
+                            &--pending {
+                                background: #e2e8f0;
+                                color: #475569;
+                            }
+
+                            &--cancelled {
+                                background: #fee2e2;
+                                color: #dc2626;
+                            }
+                        }
+
+                        &.actions {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+
+                            .icon-btn {
+                                width: 2rem;
+                                height: 2rem;
+                                border: 1px solid #d8dee8;
+                                border-radius: 0.5rem;
+                                background: #ffffff;
+                                color: #1f2937;
+                                display: inline-flex;
+                                align-items: center;
+                                justify-content: center;
+                                cursor: pointer;
+
+                                svg {
+                                    width: 1rem;
+                                    height: 1rem;
+                                }
+
+                                &:hover {
+                                    background: #eef2ff;
+                                }
+                            }
+
+                            .status-select {
+                                min-width: 130px;
+                                height: 2rem;
+                                border-radius: 0.5rem;
+                                border: 1px solid #d8dee8;
+                                background: #ffffff;
+                                color: #1f2937;
+                                padding: 0 0.5rem;
+
+                                &--sm {
+                                    min-width: 100px;
+                                    height: 1.8rem;
+                                    font-size: 0.85rem;
+                                    padding: 0 0.4rem;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

@@ -1,0 +1,59 @@
+// CarVex - Global SCSS File
+// Import all styles into one main file
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap');
+
+// ==========================================
+// 1. Variables & Utilities
+// ==========================================
+@import './utils/variables';
+@import './utils/mixins';
+@import './utils/reset';
+
+// ==========================================
+// 2. Global Styles
+// ==========================================
+@import './global/typography';
+@import './global/buttons';
+@import './global/forms';
+@import './global/alerts';
+@import './global/spacing';
+@import './global/animations';
+
+// ==========================================
+// 3. Component Styles
+// ==========================================
+@import './components/header';
+@import './components/footer';
+@import './components/layout';
+@import './components/private-route';
+@import './components/admin-route';
+@import './admin-navbar';
+
+// ==========================================
+// 4. Page Styles
+// ==========================================
+@import './pages/auth';
+@import './pages/landing';
+@import './pages/home';
+@import './pages/products';
+@import './pages/product-detail';
+@import './pages/cart';
+@import './pages/checkout';
+@import './pages/orders';
+@import './pages/profile';
+@import './pages/dashboard';
+@import './pages/customer-service';
+
+// ==========================================
+// 5. Admin Styles
+// ==========================================
+@import './pages/admin/common';
+@import './pages/admin/dashboard';
+@import './pages/admin/account';
+@import './pages/admin/analytics';
+@import './pages/admin/products';
+@import './pages/admin/orders';
+@import './pages/admin/users';
+@import './pages/admin/concerns';
+@import './pages/admin/professional-admin';
