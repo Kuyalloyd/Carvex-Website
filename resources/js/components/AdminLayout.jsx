@@ -124,7 +124,13 @@ export default function AdminLayout() {
             const statsData = statsResult?.data?.data;
             const orders = Number(statsData?.total_orders || 0);
             const products = Number(statsData?.total_products || 0);
-            const users = Number(statsData?.total_users || 0);
+            // Filter out admin users for the sidebar count
+            let users = 0;
+            if (Array.isArray(statsData?.users)) {
+                users = statsData.users.filter(user => String(user.role || '').toLowerCase() !== 'admin').length;
+            } else {
+                users = Number(statsData?.total_users || 0);
+            }
             const newConcerns = Number(statsData?.pending_customer_concerns || 0);
 
             console.log('Sidebar counts:', { orders, products, users, newConcerns });

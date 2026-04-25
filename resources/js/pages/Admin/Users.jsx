@@ -68,7 +68,7 @@ export default function AdminUsers() {
                     </div>
                     <div>
                         <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700, color: '#0f172a' }}>User Management</h1>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>{users.length} total users</p>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>{users.filter(user => String(user.role || '').toLowerCase() !== 'admin').length} total users</p>
                     </div>
                 </div>
             </div>
