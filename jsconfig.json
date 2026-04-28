@@ -10,6 +10,7 @@
     "noImplicitAny": false,
     "skipLibCheck": true,
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["resources/js/*"]
     },

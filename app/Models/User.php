@@ -84,4 +84,9 @@ class User extends Authenticatable
         return $this->hasMany(CartItem::class);
     }
 
+    public function promoCodes()
+    {
+        return $this->hasMany(PromoCode::class, 'assigned_user_id');
+    }
+
 }

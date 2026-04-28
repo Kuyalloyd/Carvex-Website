@@ -7,7 +7,10 @@ use App\Models\Category;
 use App\Models\CustomerConcern;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\PromoCode;
 use App\Models\User;
+use App\Notifications\AdminDirectMessageNotification;
+use App\Notifications\PromoCodeNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -127,7 +130,8 @@ class AdminController extends Controller
             $query->where(function ($builder) use ($q) {
                 $builder->where('name', 'like', '%' . $q . '%')
                     ->orWhere('email', 'like', '%' . $q . '%')
-                    ->orWhere('phone', 'like', '%' . $q . '%');
+                    ->orWhere('phone', 'like', '%' . $q . '%')
+                    ->orWhere('id', 'like', '%' . $q . '%');
             });
         }
 
@@ -199,6 +203,96 @@ class AdminController extends Controller
         ]);
     }
 
+    public function notifyUser(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:120',
+            'message' => 'required|string|min:5|max:2000',
+            'link' => 'nullable|string|max:255',
+        ]);
+
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        if ($user->role === 'admin') {
+            return response()->json(['message' => 'Notifications can only be sent to customer accounts.'], 400);
+        }
+
+        $user->notify(new AdminDirectMessageNotification(
+            $validated['title'],
+            $validated['message'],
+            $validated['link'] ?? '/dashboard'
+        ));
+
+        return response()->json([
+            'message' => 'Notification sent successfully',
+            'data' => [
+                'user_id' => $user->id,
+                'title' => $validated['title'],
+            ],
+        ]);
+    }
+
+    public function sendPromoCode(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'title' => 'nullable|string|max:120',
+            'message' => 'nullable|string|max:500',
+            'discount_type' => 'required|in:percentage,fixed',
+            'discount_value' => 'required|numeric|min:1',
+            'minimum_order_amount' => 'nullable|numeric|min:0',
+            'expires_in_days' => 'nullable|integer|min:1|max:365',
+        ]);
+
+        if ($validated['discount_type'] === 'percentage' && (float) $validated['discount_value'] > 100) {
+            return response()->json(['message' => 'Percentage promo codes cannot exceed 100%.'], 422);
+        }
+
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        if ($user->role === 'admin') {
+            return response()->json(['message' => 'Promo codes can only be sent to customer accounts.'], 400);
+        }
+
+        $promoCode = PromoCode::create([
+            'code' => PromoCode::generateUniqueCode(),
+            'title' => trim((string) ($validated['title'] ?? '')) ?: 'Exclusive promo from CarVex',
+            'description' => trim((string) ($validated['message'] ?? '')) ?: null,
+            'discount_type' => $validated['discount_type'],
+            'discount_value' => round((float) $validated['discount_value'], 2),
+            'minimum_order_amount' => round((float) ($validated['minimum_order_amount'] ?? 0), 2),
+            'max_uses' => 1,
+            'used_count' => 0,
+            'assigned_user_id' => $user->id,
+            'created_by_user_id' => optional($request->user())->id,
+            'is_active' => true,
+            'sent_at' => now(),
+            'expires_at' => now()->addDays((int) ($validated['expires_in_days'] ?? 30))->endOfDay(),
+        ]);
+
+        $user->notify(new PromoCodeNotification(
+            $promoCode,
+            $promoCode->title,
+            $promoCode->description
+        ));
+
+        return response()->json([
+            'message' => 'Promo code generated and sent successfully',
+            'data' => [
+                'user_id' => $user->id,
+                'code' => $promoCode->code,
+                'discount_type' => $promoCode->discount_type,
+                'discount_value' => (float) $promoCode->discount_value,
+                'expires_at' => optional($promoCode->expires_at)->toISOString(),
+            ],
+        ]);
+    }
+
     public function products(Request $request)
     {
         $query = Product::with('category')->latest();
@@ -207,7 +301,12 @@ class AdminController extends Controller
             $query->where(function ($builder) use ($q) {
                 $builder->where('name', 'like', '%' . $q . '%')
                     ->orWhere('brand', 'like', '%' . $q . '%')
-                    ->orWhere('slug', 'like', '%' . $q . '%');
+                    ->orWhere('slug', 'like', '%' . $q . '%')
+                    ->orWhere('sku', 'like', '%' . $q . '%')
+                    ->orWhere('supplier', 'like', '%' . $q . '%')
+                    ->orWhereHas('category', function ($categoryQuery) use ($q) {
+                        $categoryQuery->where('name', 'like', '%' . $q . '%');
+                    });
             });
         }
 
@@ -249,6 +348,7 @@ class AdminController extends Controller
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:products,slug',
+            'sku' => 'nullable|string|max:255|unique:products,sku',
             'brand' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
@@ -265,8 +365,11 @@ class AdminController extends Controller
             $validated['slug'] = Str::slug((string) $validated['name']) . '-' . Str::lower(Str::random(4));
         }
 
-        // Generate SKU
-        $validated['sku'] = 'PRD-' . strtoupper(Str::random(8));
+        if (empty($validated['sku'])) {
+            unset($validated['sku']);
+        } else {
+            $validated['sku'] = Str::upper(trim((string) $validated['sku']));
+        }
 
         // Handle image uploads
         $imagePaths = [];
@@ -298,6 +401,7 @@ class AdminController extends Controller
             'category_id' => 'sometimes|exists:categories,id',
             'name' => 'sometimes|string|max:255',
             'slug' => 'sometimes|string|max:255|unique:products,slug,' . $product->id,
+            'sku' => 'sometimes|nullable|string|max:255|unique:products,sku,' . $product->id,
             'brand' => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
             'price' => 'sometimes|numeric|min:0',
@@ -311,6 +415,12 @@ class AdminController extends Controller
 
         if (array_key_exists('name', $validated) && empty($validated['slug']) && empty($product->slug)) {
             $validated['slug'] = Str::slug((string) $validated['name']) . '-' . Str::lower(Str::random(4));
+        }
+
+        if (array_key_exists('sku', $validated)) {
+            $validated['sku'] = filled($validated['sku'])
+                ? Str::upper(trim((string) $validated['sku']))
+                : Product::generateUniqueSku($validated['name'] ?? $product->name, $product->id);
         }
 
         $product->fill($validated)->save();
@@ -419,7 +529,12 @@ class AdminController extends Controller
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($builder) use ($q) {
                 $builder->where('order_number', 'like', '%' . $q . '%')
-                    ->orWhere('tracking_number', 'like', '%' . $q . '%');
+                    ->orWhere('tracking_number', 'like', '%' . $q . '%')
+                    ->orWhere('status', 'like', '%' . $q . '%')
+                    ->orWhereHas('user', function ($userQuery) use ($q) {
+                        $userQuery->where('name', 'like', '%' . $q . '%')
+                            ->orWhere('email', 'like', '%' . $q . '%');
+                    });
             });
         }
 

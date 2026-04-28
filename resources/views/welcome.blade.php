@@ -13,13 +13,40 @@
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+        @php
+            $appCssPath = public_path('css/app.css');
+            $appJsPath = public_path('js/app.js');
+            $appCssVersion = file_exists($appCssPath) ? filemtime($appCssPath) : time();
+            $appJsVersion = file_exists($appJsPath) ? filemtime($appJsPath) : time();
+        @endphp
+
         <!-- Styles -->
-        <link rel="stylesheet" href="/css/app.css">
+        <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ $appCssVersion }}">
     </head>
     <body>
         <div id="app"></div>
         
         <!-- Scripts -->
-        <script src="/js/app.js"></script>
+        <script>
+            (function () {
+                var host = window.location.hostname;
+                var isLoopback = host === 'localhost' || host === '127.0.0.1';
+
+                if (!isLoopback || !('serviceWorker' in navigator)) {
+                    return;
+                }
+
+                window.addEventListener('load', function () {
+                    navigator.serviceWorker.getRegistrations()
+                        .then(function (registrations) {
+                            registrations.forEach(function (registration) {
+                                registration.unregister();
+                            });
+                        })
+                        .catch(function () {});
+                });
+            })();
+        </script>
+        <script src="{{ asset('js/app.js') }}?v={{ $appJsVersion }}"></script>
     </body>
 </html>

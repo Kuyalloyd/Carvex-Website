@@ -16,6 +16,9 @@ export const orderService = {
     createOrder: (data, config) =>
         api.post('/orders', data, { timeout: 12000, ...config }),
 
+    validatePromoCode: (data, config) =>
+        api.post('/promo-codes/validate', data, { timeout: 12000, ...config }),
+
     cancelOrder: (id, config) =>
         api.patch(`/orders/${id}/cancel`, {}, config),
 

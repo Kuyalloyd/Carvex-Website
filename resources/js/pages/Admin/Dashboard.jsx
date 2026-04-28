@@ -1,343 +1,503 @@
 import React, { useEffect, useState } from 'react';
-import AdminNavbar from '../../components/AdminNavbar';
+import { Link } from 'react-router-dom';
+import {
+    AlertTriangle,
+    ArrowRight,
+    CircleDollarSign,
+    Headphones,
+    Package,
+    ShoppingBag,
+    Users,
+} from 'lucide-react';
 import adminService from '../../services/adminService';
-import { ShoppingCart, Users, Headphones, TrendingUp, DollarSign, Package, AlertTriangle } from 'lucide-react';
 
-// Simple Line Chart Component
-const LineChart = ({ data, labels }) => {
-    const max = Math.max(...data);
-    const min = Math.min(...data);
-    const range = max - min || 1;
-    const width = 320;
-    const height = 140;
-    const padding = 32;
-    const chartWidth = width - padding * 2;
-    const chartHeight = height - padding * 2;
+const currencyFormatter = new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+});
 
-    const points = data.map((value, index) => {
-        const x = padding + (index / (data.length - 1)) * chartWidth;
-        const y = padding + chartHeight - ((value - min) / range) * chartHeight;
-        return `${x},${y}`;
-    }).join(' ');
+const compactNumberFormatter = new Intl.NumberFormat('en-PH', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+});
 
-    return (
-        <svg viewBox={`0 0 ${width} ${height}`} className="admin-chart-svg">
-            {[0, 1, 2, 3, 4].map((i) => (
-                <line key={i} x1={padding} y1={padding + (i / 4) * chartHeight} x2={width - padding} y2={padding + (i / 4) * chartHeight} stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4" />
-            ))}
-            {[0, 1, 2, 3, 4].map((i) => (
-                <text key={i} x={padding - 10} y={padding + (i / 4) * chartHeight + 4} textAnchor="end" fill="#64748b" fontSize="12">
-                    {Math.round(max - (i / 4) * range)}
-                </text>
-            ))}
-            {labels.map((label, i) => (
-                <text key={i} x={padding + (i / (labels.length - 1)) * chartWidth} y={height - 10} textAnchor="middle" fill="#64748b" fontSize="12">
-                    {label}
-                </text>
-            ))}
-            <polyline points={points} fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-            {data.map((value, i) => {
-                const x = padding + (i / (data.length - 1)) * chartWidth;
-                const y = height - padding - ((value - min) / range) * chartHeight;
-                return <circle key={i} cx={x} cy={y} r="5" fill="#3b82f6" stroke="#fff" strokeWidth="2" />;
-            })}
-        </svg>
-    );
-};
+const dateTimeFormatter = new Intl.DateTimeFormat('en-PH', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+});
 
-// Simple Bar Chart Component
-const BarChart = ({ data, labels }) => {
-    const max = Math.max(...data);
-    const width = 320;
-    const height = 140;
-    const padding = 32;
-    const chartWidth = width - padding * 2;
-    const chartHeight = height - padding * 2;
-    const barWidth = (chartWidth / data.length) * 0.6;
-    const gap = (chartWidth / data.length) * 0.4;
-
-    return (
-        <svg viewBox={`0 0 ${width} ${height}`} className="admin-chart-svg">
-            {[0, 1, 2, 3, 4].map((i) => (
-                <line key={i} x1={padding} y1={padding + (i / 4) * chartHeight} x2={width - padding} y2={padding + (i / 4) * chartHeight} stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4" />
-            ))}
-            {[0, 25, 50, 75, 100].map((val, i) => (
-                <text key={i} x={padding - 10} y={height - padding - (val / 100) * chartHeight + 4} textAnchor="end" fill="#64748b" fontSize="12">
-                    {val}
-                </text>
-            ))}
-            {data.map((value, i) => {
-                const barHeight = (value / max) * chartHeight;
-                const x = padding + i * (barWidth + gap) + gap / 2;
-                const y = height - padding - barHeight;
-                return (
-                    <rect key={i} x={x} y={y} width={barWidth} height={barHeight} fill="#8b5cf6" rx="4" />
-                );
-            })}
-            {labels.map((label, i) => (
-                <text key={i} x={padding + i * (barWidth + gap) + gap / 2 + barWidth / 2} y={height - 10} textAnchor="middle" fill="#64748b" fontSize="12">
-                    {label}
-                </text>
-            ))}
-        </svg>
-    );
+const getStatusBadgeClass = (status) => {
+    switch (String(status || '').toLowerCase()) {
+        case 'processing':
+            return 'badge-warning';
+        case 'shipped':
+            return 'badge-info';
+        case 'delivered':
+        case 'active':
+            return 'badge-success';
+        case 'cancelled':
+        case 'inactive':
+            return 'badge-danger';
+        default:
+            return 'badge-secondary';
+    }
 };
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState(null);
-    const [salesData, setSalesData] = useState(null);
-    const [recentOrders, setRecentOrders] = useState([]);
-    const [recentUsers, setRecentUsers] = useState([]);
-    const [activityFeed, setActivityFeed] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        loadData();
+        let mounted = true;
+
+        const loadData = async () => {
+            setLoading(true);
+            setError('');
+
+            try {
+                const statsRes = await adminService.getStats();
+
+                if (!mounted) {
+                    return;
+                }
+
+                setStats(statsRes.data?.data || {});
+            } catch (loadError) {
+                console.error('Failed to load dashboard data:', loadError);
+                if (mounted) {
+                    setError('We could not load the admin dashboard right now.');
+                }
+            } finally {
+                if (mounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        void loadData();
+
+        return () => {
+            mounted = false;
+        };
     }, []);
-
-    const loadData = async () => {
-        try {
-            // Load critical stats first
-            const [statsRes, ordersCountRes, productsCountRes, usersCountRes] = await Promise.all([
-                adminService.getStats(),
-                adminService.getAllOrders({ params: { count_only: true, per_page: 1 } }),
-                adminService.getProducts({ params: { count_only: true } }),
-                adminService.getUsers({ params: { count_only: true } }),
-            ]);
-
-            const orders = ordersCountRes.data?.data?.total || ordersCountRes.data?.data?.data?.length || 0;
-            const products = productsCountRes.data?.data?.total || productsCountRes.data?.data?.data?.length || 0;
-            const users = usersCountRes.data?.data?.total || usersCountRes.data?.data?.data?.length || 0;
-
-            setStats({
-                ...statsRes.data.data,
-                total_orders: orders,
-                total_products: products,
-                total_users: users,
-            });
-
-            // Load secondary data in background
-            Promise.all([
-                adminService.getSalesReport(),
-                adminService.getAllOrders({ params: { per_page: 8, include_users: true, include_items: false } }),
-                adminService.getUsers({ params: { per_page: 8 } }),
-                adminService.getCustomerConcerns({ per_page: 8 }),
-            ]).then(([salesRes, ordersListRes, usersListRes, concernsListRes]) => {
-                setSalesData(salesRes.data.data);
-
-                const orderRows = ordersListRes.data?.data?.data || [];
-                const userRows = usersListRes.data?.data?.data || [];
-                const concernRows = concernsListRes.data?.data?.data || [];
-                const combinedActivities = [
-                    ...orderRows.map((order) => ({
-                        id: `order-${order.id}`,
-                        type: 'order',
-                        title: `Order ${order.order_number || `#${order.id}`}`,
-                        description: order.user?.name ? `Placed by ${order.user.name}` : 'Placed by customer',
-                        createdAt: order.created_at,
-                    })),
-                    ...userRows.map((userRow) => ({
-                        id: `user-${userRow.id}`,
-                        type: 'user',
-                        title: 'New user account',
-                        description: `${userRow.name} (${userRow.email})`,
-                        createdAt: userRow.created_at,
-                    })),
-                    ...concernRows.map((concern) => ({
-                        id: `concern-${concern.id}`,
-                        type: 'concern',
-                        title: concern.subject || 'Customer concern',
-                        description: concern.name ? `${concern.name} submitted a concern` : 'Customer concern submitted',
-                        createdAt: concern.created_at,
-                    })),
-                ]
-                    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-                    .slice(0, 12);
-
-                setRecentOrders(orderRows);
-                setRecentUsers(userRows);
-                setActivityFeed(combinedActivities);
-            }).catch((err) => {
-                console.error('Failed to load secondary dashboard data:', err);
-            });
-
-            setLoading(false);
-        } catch (err) {
-            console.error('Failed to load dashboard data:', err);
-            setLoading(false);
-        }
-    };
-
-    const formatCurrency = (value) => {
-        if (value >= 1000) {
-            return `₱${(value / 1000).toFixed(1)}k`;
-        }
-        return `₱${value}`;
-    };
-
-    const revenueData = [14000, 16000, 21000, 19000, 23000, 28000];
-    const revenueLabels = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-    const ordersData = [45, 58, 75, 65, 85, 95];
-    const ordersLabels = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
 
     if (loading) {
         return (
             <div className="admin-page">
-                <div className="admin-dashboard-modern">
-                    <div className="loading">Loading...</div>
+                <div className="admin-workspace">
+                    <div className="admin-loading">
+                        <div className="spinner" />
+                        <p>Loading dashboard insights...</p>
+                    </div>
                 </div>
             </div>
         );
     }
 
+    if (error || !stats) {
+        return (
+            <div className="admin-page">
+                <div className="admin-workspace">
+                    <div className="admin-status-card admin-status-card--error">
+                        <h3>Dashboard unavailable</h3>
+                        <p>{error || 'The dashboard could not be loaded.'}</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const totalRevenue = Number(stats.total_revenue || 0);
+    const totalOrders = Number(stats.total_orders || 0);
+    const totalProducts = Number(stats.total_products || 0);
+    const totalUsers = Number(stats.total_users || 0);
+    const pendingConcerns = Number(stats.pending_customer_concerns || 0);
+    const lowStockCount = Number(stats.low_stock_count || 0);
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    const recentOrders = stats.recent_orders || [];
+    const recentUsers = stats.recent_users || [];
+    const recentCustomers = recentUsers.filter((user) => String(user?.role || '').toLowerCase() !== 'admin');
+    const lowStockWatchlist = (stats.low_stock_products || []).filter((product) => Number(product.stock || 0) <= 10);
+    const activityFeed = stats.recent_activities || [];
+
+    const ordersRoute = '/admin/orders';
+    const productsRoute = '/admin/products';
+    const lowStockRoute = '/admin/products?stock=low&source=dashboard';
+    const supportRoute = '/admin/customer-service';
+    const usersRoute = '/admin/users';
+
+    const primaryCards = [
+        {
+            icon: ShoppingBag,
+            label: 'Orders in motion',
+            value: compactNumberFormatter.format(totalOrders),
+            meta: `${recentOrders.length} recent orders are ready for review.`,
+            to: ordersRoute,
+            action: 'Open orders',
+            color: 'blue',
+        },
+        {
+            icon: AlertTriangle,
+            label: 'Low stock alert',
+            value: compactNumberFormatter.format(lowStockCount),
+            meta: lowStockCount > 0 ? 'Open the exact products that need restocking.' : 'Inventory is stable right now.',
+            to: lowStockRoute,
+            action: 'View low stock products',
+            color: lowStockCount > 0 ? 'amber' : 'green',
+        },
+        {
+            icon: Headphones,
+            label: 'Customer support',
+            value: compactNumberFormatter.format(pendingConcerns),
+            meta: pendingConcerns > 0 ? 'Customers are waiting for a response.' : 'Support is currently under control.',
+            to: supportRoute,
+            action: 'Review support inbox',
+            color: pendingConcerns > 0 ? 'red' : 'purple',
+        },
+        {
+            icon: Users,
+            label: 'Active customers',
+            value: compactNumberFormatter.format(totalUsers),
+            meta: `${recentCustomers.length} newest customer accounts are visible below.`,
+            to: usersRoute,
+            action: 'Manage customer accounts',
+            color: 'slate',
+        },
+    ];
+
+    const actionLanes = [
+        {
+            icon: CircleDollarSign,
+            title: 'Revenue booked',
+            description: 'Track how much value the storefront has already captured.',
+            value: currencyFormatter.format(totalRevenue),
+            to: ordersRoute,
+            action: 'Review paid orders',
+            tone: 'green',
+        },
+        {
+            icon: ShoppingBag,
+            title: 'Fulfillment queue',
+            description: 'Stay ahead of delivery flow and processing pressure.',
+            value: `${totalOrders} total orders`,
+            to: ordersRoute,
+            action: 'Open order operations',
+            tone: 'blue',
+        },
+        {
+            icon: AlertTriangle,
+            title: 'Inventory risk',
+            description: 'Jump straight into parts that are running low.',
+            value: lowStockCount > 0 ? `${lowStockCount} low stock products` : 'No low stock products',
+            to: lowStockRoute,
+            action: 'Inspect low stock parts',
+            tone: lowStockCount > 0 ? 'amber' : 'green',
+        },
+        {
+            icon: Headphones,
+            title: 'Support coverage',
+            description: 'Keep customer replies moving without leaving the dashboard.',
+            value: pendingConcerns > 0 ? `${pendingConcerns} tickets waiting` : 'Inbox is under control',
+            to: supportRoute,
+            action: 'Open support inbox',
+            tone: pendingConcerns > 0 ? 'red' : 'purple',
+        },
+    ];
+
     return (
-        <div className="admin-page" style={{ maxWidth: '100%', overflowX: 'hidden' }}>
-            <div className="admin-dashboard-modern">
-                <AdminNavbar stats={stats} loading={false} />
+        <div className="admin-page">
+            <div className="admin-workspace admin-dashboard-shell">
+                <section className="admin-hero admin-hero--dashboard">
+                    <div className="admin-hero__content">
+                        <span className="admin-hero__eyebrow">Operations overview</span>
+                        <p>
+                            Watch revenue, orders, inventory pressure, and customer support from a faster command center built around action, not clutter.
+                        </p>
+                        <div className="admin-chip-row">
+                            <span className="admin-chip">{currencyFormatter.format(totalRevenue)} revenue</span>
+                            <span className="admin-chip">{totalOrders} orders processed</span>
+                            <span className="admin-chip">{lowStockCount} low stock items</span>
+                        </div>
+                        <div className="admin-dashboard-actions">
+                            <Link to={ordersRoute} className="btn btn-primary">
+                                Review orders
+                            </Link>
+                            <Link to={lowStockRoute} className="btn btn-secondary">
+                                Low stock products
+                            </Link>
+                            <Link to={supportRoute} className="btn btn-secondary">
+                                Customer support
+                            </Link>
+                        </div>
+                    </div>
 
-                {/* Stats Grid - Professional Design */}
-                <div className="admin-stat-grid">
-                    {[
-                        { label: 'Total Revenue', value: formatCurrency(stats?.total_revenue || 117600), trend: '+12.5%', Icon: DollarSign, color: 'green' },
-                        { label: 'Total Orders', value: stats?.total_orders || 0, trend: '+8.2%', Icon: ShoppingCart, color: 'blue' },
-                        { label: 'Parts in Stock', value: stats?.total_products || 8, trend: '+3.1%', Icon: Package, color: 'purple' },
-                        { label: 'Users', value: stats?.total_users || 0, trend: '+5.3%', Icon: Users, color: 'blue' },
-                        { label: 'Low Stock Alert', value: stats?.low_stock_count || 3, trend: 'Needs attention', Icon: AlertTriangle, color: 'amber', isAlert: true },
-                    ].map((stat, i) => (
-                        <div key={i} className="admin-stat-card">
-                            <div className={`stat-icon stat-icon--${stat.color}`}>
-                                <stat.Icon size={20} />
-                            </div>
-                            <div className="stat-content">
-                                <div className="stat-label">{stat.label}</div>
-                                <div className="stat-value">{stat.value}</div>
-                                <div className={`stat-trend ${stat.isAlert ? 'negative' : 'positive'}`}>
-                                    {stat.isAlert ? <AlertTriangle size={12} /> : <TrendingUp size={12} />}{stat.trend}
+                    <div className="admin-hero__aside">
+                        <div className="admin-hero__stat">
+                            <span>Average order value</span>
+                            <strong>{currencyFormatter.format(averageOrderValue)}</strong>
+                            <small>Higher basket value gives you steadier daily revenue.</small>
+                        </div>
+                        <div className="admin-hero__stat">
+                            <span>Inventory attention</span>
+                            <strong>{lowStockCount}</strong>
+                            <small>Click below to open the exact products that are running low.</small>
+                            <Link to={lowStockRoute} className="admin-hero__stat-link">
+                                Open low stock list
+                            </Link>
+                        </div>
+                        <div className="admin-hero__stat">
+                            <span>Support queue</span>
+                            <strong>{pendingConcerns}</strong>
+                            <small>{pendingConcerns > 0 ? 'Customer follow-up is needed today.' : 'Support is calm right now.'}</small>
+                        </div>
+                    </div>
+                </section>
+
+                <div className="admin-kpi-grid admin-dashboard-priority-grid">
+                    {primaryCards.map((item) => {
+                        const Icon = item.icon;
+
+                        return (
+                            <Link key={item.label} to={item.to} className="admin-kpi-card admin-kpi-card--interactive">
+                                <div className={`admin-kpi-card__icon admin-kpi-card__icon--${item.color}`}>
+                                    <Icon size={20} />
                                 </div>
-                            </div>
-                        </div>
-                    ))}
+                                <div className="admin-kpi-card__content">
+                                    <span>{item.label}</span>
+                                    <strong>{item.value}</strong>
+                                    <small>{item.meta}</small>
+                                    <em className="admin-kpi-card__action">
+                                        {item.action}
+                                        <ArrowRight size={14} />
+                                    </em>
+                                </div>
+                            </Link>
+                        );
+                    })}
                 </div>
 
-                {/* Charts Grid - Professional */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                    <div className="admin-chart-container">
-                        <div className="admin-chart-header">
-                            <h3>Revenue Overview</h3>
-                        </div>
-                        <LineChart data={revenueData} labels={revenueLabels} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, fontSize: 12, color: '#64748b' }}>
-                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6' }}></span>
-                            Revenue (₱)
-                        </div>
-                    </div>
-                    <div className="admin-chart-container">
-                        <div className="admin-chart-header">
-                            <h3>Monthly Orders</h3>
-                        </div>
-                        <BarChart data={ordersData} labels={ordersLabels} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, fontSize: 12, color: '#64748b' }}>
-                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#8b5cf6' }}></span>
-                            Orders
-                        </div>
-                    </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                    <div style={{ background: '#fff', borderRadius: 10, padding: 16, border: '1px solid #e2e8f0', overflow: 'auto' }}>
-                        <h2 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 12px', color: '#0f172a' }}>Recent Customer Accounts</h2>
-                        {recentUsers.length === 0 ? (
-                            <p style={{ color: '#64748b', margin: 0 }}>No recent users found.</p>
-                        ) : (
-                            <div className="admin-table-wrapper">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Role</th>
-                                            <th>Orders</th>
-                                            <th>Last Order</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {recentUsers.map((userRow) => (
-                                            <tr key={userRow.id}>
-                                                <td><strong>{userRow.name}</strong></td>
-                                                <td className="text-muted">{userRow.email}</td>
-                                                <td className="text-muted">{userRow.role || 'customer'}</td>
-                                                <td>{Number(userRow.orders_count || 0)}</td>
-                                                <td className="text-muted">{userRow.last_order_at ? new Date(userRow.last_order_at).toLocaleString() : 'No orders yet'}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                <div className="admin-grid admin-grid--2">
+                    <section className="admin-section-card admin-dashboard-section admin-dashboard-section--compact">
+                        <div className="admin-section-card__header">
+                            <div>
+                                <h2>Recent orders</h2>
+                                <p>The latest customer purchases entering your pipeline.</p>
                             </div>
-                        )}
-                    </div>
+                            <Link to={ordersRoute} className="admin-inline-badge">
+                                <ShoppingBag size={14} />
+                                Open orders
+                            </Link>
+                        </div>
 
-                    <div style={{ background: '#fff', borderRadius: 10, padding: 16, border: '1px solid #e2e8f0', overflow: 'auto' }}>
-                        <h2 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 12px', color: '#0f172a' }}>Recent Orders (All Customers)</h2>
                         {recentOrders.length === 0 ? (
-                            <p style={{ color: '#64748b', margin: 0 }}>No recent orders found.</p>
+                            <p className="admin-note">No orders have been placed yet.</p>
                         ) : (
-                            <div className="admin-table-wrapper">
-                                <table>
+                            <div className="admin-table-shell">
+                                <table className="admin-data-table admin-data-table--compact">
                                     <thead>
                                         <tr>
                                             <th>Order</th>
                                             <th>Customer</th>
                                             <th>Total</th>
                                             <th>Status</th>
-                                            <th>Date</th>
+                                            <th>Placed</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {recentOrders.map((order) => (
+                                        {recentOrders.slice(0, 4).map((order) => (
                                             <tr key={order.id}>
-                                                <td><strong>{order.order_number || `#${order.id}`}</strong></td>
-                                                <td className="text-muted">{order.user?.name || 'N/A'}</td>
-                                                <td>{formatCurrency(order.total_amount || 0)}</td>
-                                                <td className="text-muted">{order.status}</td>
-                                                <td className="text-muted">{order.created_at ? new Date(order.created_at).toLocaleString() : 'N/A'}</td>
+                                                <td>
+                                                    <div className="admin-table-stack">
+                                                        <strong>{order.order_number || `#${order.id}`}</strong>
+                                                        <span>Tracking {order.tracking_number || 'pending'}</span>
+                                                    </div>
+                                                </td>
+                                                <td>{order.user?.name || 'Customer'}</td>
+                                                <td>{currencyFormatter.format(Number(order.total_amount || 0))}</td>
+                                                <td>
+                                                    <span className={`badge ${getStatusBadgeClass(order.status)}`}>
+                                                        {order.status || 'pending'}
+                                                    </span>
+                                                </td>
+                                                <td>{order.created_at ? dateTimeFormatter.format(new Date(order.created_at)) : 'N/A'}</td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             </div>
                         )}
-                    </div>
-                </div>
+                    </section>
 
-                <div className="admin-panel">
-                    <div className="admin-panel-header">
-                        <h3>Recent Activity Feed</h3>
-                    </div>
-                    {activityFeed.length === 0 ? (
-                        <div className="admin-empty-state">
-                            <p>No recent activities found.</p>
+                    <section className="admin-section-card admin-dashboard-section admin-dashboard-section--compact">
+                        <div className="admin-section-card__header">
+                            <div>
+                                <h2>Recent activity</h2>
+                                <p>A live pulse of the newest changes across orders, customers, and support.</p>
+                            </div>
                         </div>
-                    ) : (
-                        <div className="admin-activity-feed">
-                            {activityFeed.map((activity) => (
-                                <div key={activity.id} className="activity-item">
-                                    <div className={`activity-icon ${activity.type}`}>
-                                        {activity.type === 'order' && <ShoppingCart size={20} />}
-                                        {activity.type === 'user' && <Users size={20} />}
-                                        {activity.type === 'concern' && <Headphones size={20} />}
-                                    </div>
-                                    <div className="activity-content">
-                                        <div className="activity-title">{activity.title}</div>
-                                        <div className="activity-desc">{activity.description}</div>
-                                        <div className="activity-time">
-                                            {activity.createdAt ? new Date(activity.createdAt).toLocaleString() : ''}
+
+                        {activityFeed.length === 0 ? (
+                            <p className="admin-note">No recent activity to show.</p>
+                        ) : (
+                            <div className="admin-feed admin-feed--compact">
+                                {activityFeed.slice(0, 4).map((activity) => (
+                                    <div key={activity.id} className="admin-feed__item">
+                                        <span className={`admin-feed__dot admin-feed__dot--${activity.type}`} />
+                                        <div className="admin-feed__content">
+                                            <strong>{activity.title}</strong>
+                                            <p>{activity.description}</p>
+                                            <small>{activity.created_at ? dateTimeFormatter.format(new Date(activity.created_at)) : 'N/A'}</small>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                ))}
+                            </div>
+                        )}
+                    </section>
                 </div>
+
+                <div className="admin-grid admin-grid--2">
+                    <section className="admin-section-card admin-dashboard-section admin-dashboard-section--compact">
+                        <div className="admin-section-card__header">
+                            <div>
+                                <h2>Newest customers</h2>
+                                <p>Fresh accounts that may turn into repeat buyers.</p>
+                            </div>
+                            <Link to={usersRoute} className="admin-inline-badge">
+                                <Users size={14} />
+                                Open users
+                            </Link>
+                        </div>
+
+                        {recentCustomers.length === 0 ? (
+                            <p className="admin-note">No recent customer registrations yet.</p>
+                        ) : (
+                            <div className="admin-list-stack admin-list-stack--compact">
+                                {recentCustomers.slice(0, 4).map((customer) => (
+                                    <div key={customer.id} className="admin-list-row">
+                                        <div>
+                                            <strong>{customer.name}</strong>
+                                            <span>{customer.email}</span>
+                                        </div>
+                                        <div className="admin-list-row__aside">
+                                            <span className={`badge ${getStatusBadgeClass(customer.is_active ? 'active' : 'inactive')}`}>
+                                                {customer.is_active ? 'active' : 'inactive'}
+                                            </span>
+                                            <small>{customer.created_at ? dateTimeFormatter.format(new Date(customer.created_at)) : 'N/A'}</small>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+
+                    <section className="admin-section-card admin-dashboard-section admin-dashboard-section--compact">
+                        <div className="admin-section-card__header">
+                            <div>
+                                <h2>Inventory summary</h2>
+                                <p>Keep the catalog balanced before stock gaps affect customer orders.</p>
+                            </div>
+                            <Link to={productsRoute} className="admin-inline-badge admin-inline-badge--violet">
+                                <Package size={14} />
+                                Open inventory
+                            </Link>
+                        </div>
+
+                        <div className="admin-dashboard-summary-grid">
+                            <div className="admin-dashboard-summary-card">
+                                <span>Active parts</span>
+                                <strong>{compactNumberFormatter.format(totalProducts)}</strong>
+                                <small>Products currently listed in the active catalog.</small>
+                            </div>
+                            <div className="admin-dashboard-summary-card">
+                                <span>Low stock</span>
+                                <strong>{compactNumberFormatter.format(lowStockCount)}</strong>
+                                <small>Products that should be restocked soon.</small>
+                            </div>
+                            <div className="admin-dashboard-summary-card">
+                                <span>Support queue</span>
+                                <strong>{compactNumberFormatter.format(pendingConcerns)}</strong>
+                                <small>Tickets waiting for admin attention.</small>
+                            </div>
+                            <div className="admin-dashboard-summary-card">
+                                <span>Total customers</span>
+                                <strong>{compactNumberFormatter.format(totalUsers)}</strong>
+                                <small>Accounts currently tracked in the system.</small>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div className="admin-grid admin-grid--2">
+                    <section className="admin-section-card admin-dashboard-section admin-dashboard-section--lanes">
+                        <div className="admin-section-card__header">
+                            <div>
+                                <h2>Priority lanes</h2>
+                                <p>Use these shortcuts when you want to act on the biggest admin tasks first.</p>
+                            </div>
+                        </div>
+
+                        <div className="admin-dashboard-lanes admin-dashboard-lanes--compact">
+                            {actionLanes.map((lane) => {
+                                const Icon = lane.icon;
+
+                                return (
+                                    <Link key={lane.title} to={lane.to} className={`admin-dashboard-lane admin-dashboard-lane--${lane.tone}`}>
+                                        <div className="admin-dashboard-lane__icon">
+                                            <Icon size={18} />
+                                        </div>
+                                        <div className="admin-dashboard-lane__content">
+                                            <strong>{lane.title}</strong>
+                                            <p>{lane.description}</p>
+                                            <span>{lane.value}</span>
+                                        </div>
+                                        <span className="admin-dashboard-lane__link">
+                                            {lane.action}
+                                            <ArrowRight size={14} />
+                                        </span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </section>
+
+                    <section className="admin-section-card admin-dashboard-section admin-dashboard-section--watchlist">
+                        <div className="admin-section-card__header">
+                            <div>
+                                <h2>Low stock watchlist</h2>
+                                <p>Click any row to open the filtered inventory view for stock attention.</p>
+                            </div>
+                            <Link to={lowStockRoute} className="admin-inline-badge admin-inline-badge--warning">
+                                <AlertTriangle size={14} />
+                                {lowStockCount} flagged
+                            </Link>
+                        </div>
+
+                        {lowStockWatchlist.length === 0 ? (
+                            <p className="admin-note">Inventory levels look healthy right now.</p>
+                        ) : (
+                            <div className="admin-list-stack admin-list-stack--compact">
+                                {lowStockWatchlist.slice(0, 4).map((product) => (
+                                    <Link key={product.id} to={lowStockRoute} className="admin-list-row admin-list-row--interactive">
+                                        <div>
+                                            <strong>{product.name}</strong>
+                                            <span>{product.brand || product.sku || 'Inventory item'}</span>
+                                        </div>
+                                        <div className="admin-list-row__aside">
+                                            <span className={`badge ${Number(product.stock || 0) === 0 ? 'badge-danger' : 'badge-warning'}`}>
+                                                {Number(product.stock || 0)} left
+                                            </span>
+                                            <small>Open inventory</small>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                </div>
+
             </div>
         </div>
     );

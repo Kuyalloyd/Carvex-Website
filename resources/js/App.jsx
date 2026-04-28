@@ -39,6 +39,7 @@ const DashboardProfile = lazy(() => import('./pages/Dashboard/Profile'));
 const DashboardOrders = lazy(() => import('./pages/Dashboard/Orders'));
 const DashboardProducts = lazy(() => import('./pages/Dashboard/Products'));
 const DashboardCart = lazy(() => import('./pages/Dashboard/Cart'));
+const DashboardSupport = lazy(() => import('./pages/Dashboard/Support'));
 const DashboardWishlist = lazy(() => import('./pages/Dashboard/Wishlist'));
 const DashboardWallet = lazy(() => import('./pages/Dashboard/Wallet'));
 const DashboardAddresses = lazy(() => import('./pages/Dashboard/Addresses'));
@@ -154,6 +155,8 @@ export default function App() {
                                 <Route path="/dashboard/orders" element={<DashboardOrders />} />
                                 <Route path="/dashboard/orders/:id" element={<OrderDetail />} />
                                 <Route path="/dashboard/products" element={<DashboardProducts />} />
+                                <Route path="/dashboard/products/:id" element={<ProductDetail />} />
+                                <Route path="/dashboard/support" element={<DashboardSupport />} />
                                 <Route path="/dashboard/garage" element={<Navigate to="/dashboard/products" replace />} />
                                 <Route path="/dashboard/wishlist" element={<DashboardWishlist />} />
                                 <Route path="/dashboard/wallet" element={<DashboardWallet />} />

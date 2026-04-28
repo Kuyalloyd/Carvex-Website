@@ -7,6 +7,66 @@ use App\Http\Controllers\API\AuthController;
 Route::get('/auth/redirect/google', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/callback/google', [AuthController::class, 'handleGoogleCallback']);
 
+$spaResponse = function () {
+    return response()
+        ->view('welcome')
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', '0');
+};
+
+$cleanupServiceWorker = <<<'JS'
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil((async () => {
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+        await self.clients.claim();
+        await self.registration.unregister();
+
+        const clients = await self.clients.matchAll({
+            type: 'window',
+            includeUncontrolled: true,
+        });
+
+        await Promise.all(clients.map((client) => client.navigate(client.url)));
+    })());
+});
+
+self.addEventListener('fetch', () => {});
+JS;
+
+$serviceWorkerResponse = function () use ($cleanupServiceWorker) {
+    return response($cleanupServiceWorker, 200, [
+        'Content-Type' => 'application/javascript; charset=UTF-8',
+        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+        'Expires' => '0',
+        'Service-Worker-Allowed' => '/',
+        'Clear-Site-Data' => '"cache", "storage"',
+    ]);
+};
+
+$manifestResponse = function () {
+    return response()->json([
+        'name' => 'CarVex',
+        'short_name' => 'CarVex',
+        'start_url' => '/',
+        'display' => 'standalone',
+        'background_color' => '#ffffff',
+        'theme_color' => '#111827',
+        'icons' => [],
+    ], 200, [
+        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+        'Expires' => '0',
+        'Clear-Site-Data' => '"cache"',
+    ]);
+};
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -18,11 +78,12 @@ Route::get('/auth/callback/google', [AuthController::class, 'handleGoogleCallbac
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/sw.js', $serviceWorkerResponse);
+Route::get('/service-worker.js', $serviceWorkerResponse);
+Route::get('/manifest.json', $manifestResponse);
+Route::get('/manifest.webmanifest', $manifestResponse);
+
+Route::get('/', $spaResponse);
 
 // Catch all routes - let React Router handle frontend routing
-Route::fallback(function () {
-    return view('welcome');
-});
+Route::fallback($spaResponse);

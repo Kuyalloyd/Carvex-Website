@@ -1,11 +1,44 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import {
+    Clock3,
+    Eye,
+    PackageCheck,
+    Search,
+    ShoppingBag,
+    Trash2,
+    Truck,
+    X,
+} from 'lucide-react';
 import adminService from '../../services/adminService';
-import { ShoppingCart, Download, Eye, Search, Trash2, Package, Clock, Truck, CheckCircle, XCircle, X } from 'lucide-react';
 
 const ORDER_STATUSES = ['processing', 'shipped', 'delivered', 'cancelled'];
 
-const formatCurrency = (value) => `PHP ${Number(value || 0).toFixed(2)}`;
+const currencyFormatter = new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+});
+
+const dateFormatter = new Intl.DateTimeFormat('en-PH', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+});
+
+const getStatusBadgeClass = (status) => {
+    switch (status) {
+        case 'processing':
+            return 'badge-warning';
+        case 'shipped':
+            return 'badge-info';
+        case 'delivered':
+            return 'badge-success';
+        case 'cancelled':
+            return 'badge-danger';
+        default:
+            return 'badge-secondary';
+    }
+};
 
 export default function AdminOrders() {
     const [orders, setOrders] = useState([]);
@@ -28,16 +61,19 @@ export default function AdminOrders() {
                         per_page: 200,
                     },
                 });
-                if (mounted) {
-                    const rows = res.data?.data?.data || [];
-                    setOrders(rows);
-                    setNextStatusByOrderId(
-                        rows.reduce((acc, order) => {
-                            acc[order.id] = order.status || 'processing';
-                            return acc;
-                        }, {})
-                    );
+
+                if (!mounted) {
+                    return;
                 }
+
+                const rows = res.data?.data?.data || [];
+                setOrders(rows);
+                setNextStatusByOrderId(
+                    rows.reduce((acc, order) => {
+                        acc[order.id] = order.status || 'processing';
+                        return acc;
+                    }, {})
+                );
             } catch (err) {
                 console.error('Failed to fetch orders:', err);
             } finally {
@@ -47,7 +83,8 @@ export default function AdminOrders() {
             }
         };
 
-        fetchOrders();
+        void fetchOrders();
+
         return () => {
             mounted = false;
         };
@@ -61,7 +98,6 @@ export default function AdminOrders() {
 
         try {
             setUpdatingOrderId(order.id);
-            // Backend will auto-generate tracking number if shipping and none exists
             await adminService.updateOrderStatus(order.id, nextStatus);
             setOrders((prev) => prev.map((item) => (
                 item.id === order.id
@@ -80,67 +116,55 @@ export default function AdminOrders() {
         if (!window.confirm(`Are you sure you want to delete order ${order.order_number || order.id}? This action cannot be undone.`)) {
             return;
         }
+
         try {
             await adminService.deleteOrder(order.id);
             setOrders((prev) => prev.filter((item) => item.id !== order.id));
+            window.dispatchEvent(new Event('sidebar-counts-refresh'));
         } catch (err) {
             const message = err?.response?.data?.message || 'Failed to delete order';
             window.alert(message);
         }
     };
 
-    const filteredOrders = useMemo(() => {
+    const filteredOrders = orders.filter((order) => {
         const needle = searchTerm.trim().toLowerCase();
 
-        return orders.filter((order) => {
-            if (statusFilter !== 'all' && order.status !== statusFilter) {
-                return false;
-            }
-
-            if (!needle) {
-                return true;
-            }
-
-            return [
-                order.order_number,
-                String(order.id || ''),
-                order.tracking_number,
-                order.user?.name,
-                order.user?.email,
-            ]
-                .filter(Boolean)
-                .some((value) => String(value).toLowerCase().includes(needle));
-        });
-    }, [orders, searchTerm, statusFilter]);
-
-    const stats = useMemo(() => ({
-        total: orders.length,
-        processing: orders.filter((o) => o.status === 'processing').length,
-        shipped: orders.filter((o) => o.status === 'shipped').length,
-        delivered: orders.filter((o) => o.status === 'delivered').length,
-        cancelled: orders.filter((o) => o.status === 'cancelled').length,
-    }), [orders]);
-
-    const getStatusBadgeClass = (status) => {
-        switch (status) {
-            case 'processing':
-                return 'badge-warning';
-            case 'shipped':
-                return 'badge-info';
-            case 'delivered':
-                return 'badge-success';
-            case 'cancelled':
-                return 'badge-danger';
-            default:
-                return 'badge-secondary';
+        if (statusFilter !== 'all' && order.status !== statusFilter) {
+            return false;
         }
+
+        if (!needle) {
+            return true;
+        }
+
+        return [
+            order.order_number,
+            String(order.id || ''),
+            order.tracking_number,
+            order.user?.name,
+            order.user?.email,
+        ]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(needle));
+    });
+
+    const stats = {
+        total: orders.length,
+        processing: orders.filter((order) => order.status === 'processing').length,
+        shipped: orders.filter((order) => order.status === 'shipped').length,
+        delivered: orders.filter((order) => order.status === 'delivered').length,
+        cancelled: orders.filter((order) => order.status === 'cancelled').length,
     };
 
     if (loading) {
         return (
             <div className="admin-page">
-                <div className="admin-dashboard-modern">
-                    <div className="loading">Loading orders...</div>
+                <div className="admin-workspace">
+                    <div className="admin-loading">
+                        <div className="spinner" />
+                        <p>Loading order operations...</p>
+                    </div>
                 </div>
             </div>
         );
@@ -149,118 +173,123 @@ export default function AdminOrders() {
     return (
         <>
             <div className="admin-page">
-                <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem' }}>
-                    {/* Header */}
-                    <div style={{ marginBottom: '2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                            <div style={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '10px',
-                                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#fff'
-                            }}>
-                                <ShoppingCart size={20} />
-                            </div>
-                            <div>
-                                <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>Order Management</h1>
-                                <p style={{ margin: 0, color: '#64748b', fontSize: '0.875rem' }}>{stats.total} total orders</p>
+                <div className="admin-workspace">
+                    <section className="admin-hero admin-hero--orders">
+                        <div className="admin-hero__content">
+                            <span className="admin-hero__eyebrow">Fulfillment desk</span>
+                            <h1>Handle every order with more confidence.</h1>
+                            <p>
+                                Review the queue, update statuses quickly, and keep the customer delivery journey clean and transparent.
+                            </p>
+                            <div className="admin-chip-row">
+                                <span className="admin-chip">{stats.total} orders tracked</span>
+                                <span className="admin-chip">{stats.processing} in processing</span>
+                                <span className="admin-chip">{stats.shipped} already in transit</span>
                             </div>
                         </div>
+
+                        <div className="admin-hero__aside">
+                            <div className="admin-hero__stat">
+                                <span>Delivered</span>
+                                <strong>{stats.delivered}</strong>
+                                <small>Completed customer handoffs.</small>
+                            </div>
+                            <div className="admin-hero__stat">
+                                <span>Cancelled</span>
+                                <strong>{stats.cancelled}</strong>
+                                <small>Orders removed from active revenue flow.</small>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div className="admin-kpi-grid admin-kpi-grid--compact">
+                        <article className="admin-kpi-card">
+                            <div className="admin-kpi-card__icon admin-kpi-card__icon--blue">
+                                <ShoppingBag size={20} />
+                            </div>
+                            <div className="admin-kpi-card__content">
+                                <span>Total orders</span>
+                                <strong>{stats.total}</strong>
+                                <small>All captured transactions in the admin panel.</small>
+                            </div>
+                        </article>
+
+                        <article className="admin-kpi-card">
+                            <div className="admin-kpi-card__icon admin-kpi-card__icon--amber">
+                                <Clock3 size={20} />
+                            </div>
+                            <div className="admin-kpi-card__content">
+                                <span>Processing</span>
+                                <strong>{stats.processing}</strong>
+                                <small>Orders waiting for the next fulfillment step.</small>
+                            </div>
+                        </article>
+
+                        <article className="admin-kpi-card">
+                            <div className="admin-kpi-card__icon admin-kpi-card__icon--purple">
+                                <Truck size={20} />
+                            </div>
+                            <div className="admin-kpi-card__content">
+                                <span>Shipped</span>
+                                <strong>{stats.shipped}</strong>
+                                <small>Orders already handed over for delivery.</small>
+                            </div>
+                        </article>
+
+                        <article className="admin-kpi-card">
+                            <div className="admin-kpi-card__icon admin-kpi-card__icon--green">
+                                <PackageCheck size={20} />
+                            </div>
+                            <div className="admin-kpi-card__content">
+                                <span>Delivered</span>
+                                <strong>{stats.delivered}</strong>
+                                <small>Fulfilled purchases that reached the customer.</small>
+                            </div>
+                        </article>
                     </div>
 
-                    {/* Orders Panel */}
-                    <div style={{
-                        background: '#fff',
-                        borderRadius: '12px',
-                        border: '1px solid #e2e8f0',
-                        overflow: 'hidden'
-                    }}>
-                        {/* Search & Filter Bar */}
-                        <div style={{
-                            padding: '1.25rem',
-                            borderBottom: '1px solid #e2e8f0',
-                            display: 'flex',
-                            gap: '1rem',
-                            flexWrap: 'wrap',
-                            alignItems: 'center'
-                        }}>
-                            <div style={{
-                                flex: 1,
-                                minWidth: '200px',
-                                maxWidth: '300px',
-                                position: 'relative'
-                            }}>
-                                <Search size={16} style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                    <section className="admin-section-card">
+                        <div className="admin-toolbar">
+                            <div className="admin-toolbar__search">
+                                <Search size={16} />
                                 <input
                                     type="text"
-                                    placeholder="Search orders..."
+                                    placeholder="Search by order number, tracking, or customer"
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.5rem 0.75rem 0.5rem 2rem',
-                                        border: '1px solid #e2e8f0',
-                                        borderRadius: '6px',
-                                        fontSize: '0.8125rem',
-                                        outline: 'none',
-                                        transition: 'border-color 0.2s',
-                                        color: '#1e293b'
-                                    }}
-                                    onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
-                                    onBlur={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
+                                    onChange={(event) => setSearchTerm(event.target.value)}
                                 />
                             </div>
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                style={{
-                                    padding: '0.625rem 2rem 0.625rem 1rem',
-                                    border: '1px solid #e2e8f0',
-                                    borderRadius: '8px',
-                                    fontSize: '0.875rem',
-                                    color: '#0f172a',
-                                    background: '#fff',
-                                    cursor: 'pointer',
-                                    outline: 'none',
-                                    width: '140px'
-                                }}
-                            >
-                                <option value="all">All Statuses</option>
-                                {ORDER_STATUSES.map((status) => (
-                                    <option key={status} value={status}>
-                                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                                    </option>
-                                ))}
-                            </select>
+
+                            <div className="admin-toolbar__filters">
+                                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+                                    <option value="all">All statuses</option>
+                                    {ORDER_STATUSES.map((status) => (
+                                        <option key={status} value={status}>
+                                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
                         {filteredOrders.length === 0 ? (
-                            <div style={{
-                                padding: '4rem 2rem',
-                                textAlign: 'center',
-                                color: '#64748b'
-                            }}>
-                                <ShoppingCart size={64} style={{ color: '#cbd5e1', marginBottom: '1rem' }} />
-                                <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.125rem', fontWeight: 600, color: '#475569' }}>No Orders Found</h3>
-                                <p style={{ margin: 0, fontSize: '0.875rem' }}>Try adjusting your search or filters</p>
+                            <div className="admin-empty-state">
+                                <ShoppingBag size={44} />
+                                <h3>No matching orders</h3>
+                                <p>Try a different search term or status filter.</p>
                             </div>
                         ) : (
-                            <div style={{ overflowX: 'auto' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <div className="admin-table-shell">
+                                <table className="admin-data-table">
                                     <thead>
-                                        <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                                            <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Order</th>
-                                            <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Customer</th>
-                                            <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Items</th>
-                                            <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</th>
-                                            <th style={{ padding: '1rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</th>
-                                            <th style={{ padding: '1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
-                                            <th style={{ padding: '1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tracking #</th>
-                                            <th style={{ padding: '1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
+                                        <tr>
+                                            <th>Order</th>
+                                            <th>Customer</th>
+                                            <th>Items</th>
+                                            <th>Timeline</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -274,54 +303,43 @@ export default function AdminOrders() {
                                                 ? order.items.map((item) => item.product?.name).filter(Boolean)
                                                 : [];
 
-                                            const statusColors = {
-                                                processing: { bg: '#fef3c7', text: '#92400e' },
-                                                shipped: { bg: '#e0f2fe', text: '#075985' },
-                                                delivered: { bg: '#d1fae5', text: '#065f46' },
-                                                cancelled: { bg: '#fee2e2', text: '#991b1b' }
-                                            };
-                                            const statusColor = statusColors[currentStatus] || statusColors.processing;
-
                                             return (
-                                                <tr key={order.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                                                    <td style={{ padding: '1rem' }}>
-                                                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.875rem' }}>{order.order_number || `ORD-${String(order.id).padStart(3, '0')}`}</div>
-                                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.125rem' }}>#{order.id}</div>
-                                                    </td>
-                                                    <td style={{ padding: '1rem' }}>
-                                                        <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '0.875rem' }}>{order.user?.name || 'N/A'}</div>
-                                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.125rem' }}>{order.user?.email || 'No email'}</div>
-                                                    </td>
-                                                    <td style={{ padding: '1rem', color: '#64748b', fontSize: '0.875rem' }}>
-                                                        {itemNames.length > 0 ? itemNames.slice(0, 2).join(', ') : 'N/A'}
-                                                        {itemNames.length > 2 ? <span style={{ color: '#94a3b8' }}> +{itemNames.length - 2} more</span> : ''}
-                                                    </td>
-                                                    <td style={{ padding: '1rem', color: '#64748b', fontSize: '0.875rem' }}>
-                                                        {order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}
-                                                    </td>
-                                                    <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.875rem' }}>{formatCurrency(order.total_amount || order.total)}</div>
-                                                    </td>
-                                                    <td style={{ padding: '1rem', textAlign: 'center' }}>
-                                                        <span style={{
-                                                            padding: '0.375rem 0.75rem',
-                                                            borderRadius: '6px',
-                                                            fontSize: '0.75rem',
-                                                            fontWeight: 600,
-                                                            background: statusColor.bg,
-                                                            color: statusColor.text,
-                                                            display: 'inline-block'
-                                                        }}>
-                                                            {currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1)}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ padding: '1rem', textAlign: 'center' }}>
-                                                        <div style={{ fontSize: '0.75rem', fontWeight: 500, color: order.tracking_number ? '#0ea5e9' : '#94a3b8' }}>
-                                                            {order.tracking_number || '-'}
+                                                <tr key={order.id}>
+                                                    <td>
+                                                        <div className="admin-table-stack">
+                                                            <strong>{order.order_number || `ORD-${String(order.id).padStart(3, '0')}`}</strong>
+                                                            <span>#{order.id}</span>
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '0.75rem', minWidth: '280px' }}>
-                                                        <div style={{ display: 'flex', gap: '0.375rem', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                    <td>
+                                                        <div className="admin-table-stack">
+                                                            <strong>{order.user?.name || 'N/A'}</strong>
+                                                            <span>{order.user?.email || 'No email provided'}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div className="admin-table-stack">
+                                                            <strong>{itemNames.length || 0} items</strong>
+                                                            <span>
+                                                                {itemNames.length > 0 ? itemNames.slice(0, 2).join(', ') : 'No product items found'}
+                                                                {itemNames.length > 2 ? ` +${itemNames.length - 2} more` : ''}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div className="admin-table-stack">
+                                                            <strong>{order.created_at ? dateFormatter.format(new Date(order.created_at)) : 'N/A'}</strong>
+                                                            <span>{order.tracking_number ? `Tracking ${order.tracking_number}` : 'Tracking pending'}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>{currencyFormatter.format(Number(order.total_amount || order.total || 0))}</td>
+                                                    <td>
+                                                        <span className={`badge ${getStatusBadgeClass(currentStatus)}`}>
+                                                            {currentStatus}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div className="admin-inline-controls">
                                                             <select
                                                                 value={selectedStatus}
                                                                 onChange={(event) => {
@@ -329,17 +347,7 @@ export default function AdminOrders() {
                                                                     setNextStatusByOrderId((prev) => ({ ...prev, [order.id]: value }));
                                                                 }}
                                                                 disabled={isUpdating}
-                                                                style={{
-                                                                    padding: '0.375rem 1.25rem 0.375rem 0.5rem',
-                                                                    fontSize: '0.7rem',
-                                                                    border: '1px solid #e2e8f0',
-                                                                    borderRadius: '5px',
-                                                                    background: '#fff',
-                                                                    cursor: 'pointer',
-                                                                    outline: 'none',
-                                                                    color: '#1e293b',
-                                                                    minWidth: '70px'
-                                                                }}
+                                                                className="admin-select-compact"
                                                             >
                                                                 {ORDER_STATUSES.map((value) => (
                                                                     <option key={value} value={value}>
@@ -347,73 +355,32 @@ export default function AdminOrders() {
                                                                     </option>
                                                                 ))}
                                                             </select>
+
                                                             <button
                                                                 type="button"
+                                                                className="btn btn-success btn-sm"
                                                                 onClick={() => handleUpdateStatus(order)}
                                                                 disabled={!canApply}
-                                                                style={{
-                                                                    padding: '0.375rem 0.5rem',
-                                                                    fontSize: '0.7rem',
-                                                                    fontWeight: 500,
-                                                                    border: 'none',
-                                                                    borderRadius: '5px',
-                                                                    cursor: canApply ? 'pointer' : 'not-allowed',
-                                                                    background: canApply ? '#10b981' : '#d1d5db',
-                                                                    color: '#fff',
-                                                                    transition: 'background 0.2s',
-                                                                    whiteSpace: 'nowrap',
-                                                                    minWidth: '40px'
-                                                                }}
-                                                                onMouseEnter={(e) => canApply && (e.currentTarget.style.background = '#059669')}
-                                                                onMouseLeave={(e) => canApply && (e.currentTarget.style.background = '#10b981')}
                                                             >
-                                                                {isUpdating ? '...' : '✓'}
+                                                                {isUpdating ? 'Applying...' : 'Apply'}
                                                             </button>
+
                                                             <button
                                                                 type="button"
+                                                                className="admin-icon-button"
                                                                 onClick={() => setSelectedOrder(order)}
-                                                                style={{
-                                                                    padding: '0.375rem',
-                                                                    border: 'none',
-                                                                    borderRadius: '5px',
-                                                                    cursor: 'pointer',
-                                                                    background: '#3b82f6',
-                                                                    color: '#fff',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    transition: 'background 0.2s',
-                                                                    width: '28px',
-                                                                    height: '28px'
-                                                                }}
-                                                                onMouseEnter={(e) => e.currentTarget.style.background = '#2563eb'}
-                                                                onMouseLeave={(e) => e.currentTarget.style.background = '#3b82f6'}
-                                                                title="View Order"
+                                                                title="View order"
                                                             >
-                                                                <Eye size={14} />
+                                                                <Eye size={16} />
                                                             </button>
+
                                                             <button
                                                                 type="button"
+                                                                className="admin-icon-button admin-icon-button--danger"
                                                                 onClick={() => handleDelete(order)}
-                                                                style={{
-                                                                    padding: '0.375rem',
-                                                                    border: 'none',
-                                                                    borderRadius: '5px',
-                                                                    cursor: 'pointer',
-                                                                    background: '#ef4444',
-                                                                    color: '#fff',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    transition: 'background 0.2s',
-                                                                    width: '28px',
-                                                                    height: '28px'
-                                                                }}
-                                                                onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
-                                                                onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
-                                                                title="Delete Order"
+                                                                title="Delete order"
                                                             >
-                                                                <Trash2 size={14} />
+                                                                <Trash2 size={16} />
                                                             </button>
                                                         </div>
                                                     </td>
@@ -424,152 +391,105 @@ export default function AdminOrders() {
                                 </table>
                             </div>
                         )}
-                    </div>
+                    </section>
                 </div>
             </div>
 
-            {/* Order Detail Modal */}
-            {selectedOrder && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.7)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 2147483647,
-                    padding: '1rem'
-                }} onClick={(e) => {
-                    if (e.target === e.currentTarget) setSelectedOrder(null);
+            {selectedOrder ? (
+                <div className="admin-modal" onClick={(event) => {
+                    if (event.target === event.currentTarget) {
+                        setSelectedOrder(null);
+                    }
                 }}>
-                    <div style={{
-                        background: '#fff',
-                        borderRadius: '12px',
-                        maxWidth: '800px',
-                        width: '100%',
-                        maxHeight: '90vh',
-                        overflow: 'auto',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                        animation: 'fadeIn 0.2s ease'
-                    }} onClick={(e) => e.stopPropagation()}>
-                        <div style={{
-                            padding: '1.5rem',
-                            borderBottom: '1px solid #e2e8f0',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            background: '#fff',
-                            position: 'sticky',
-                            top: 0,
-                            zIndex: 1
-                        }}>
+                    <div className="admin-modal__dialog admin-modal__dialog--wide" onClick={(event) => event.stopPropagation()}>
+                        <div className="admin-modal__header">
                             <div>
-                                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>Order {selectedOrder.order_number || `#${selectedOrder.id}`}</h2>
-                                <p style={{ margin: '0.25rem 0 0', color: '#64748b', fontSize: '0.875rem' }}>
-                                    {selectedOrder.created_at ? new Date(selectedOrder.created_at).toLocaleString() : ''}
-                                </p>
+                                <h2>Order {selectedOrder.order_number || `#${selectedOrder.id}`}</h2>
+                                <p>{selectedOrder.created_at ? dateFormatter.format(new Date(selectedOrder.created_at)) : 'N/A'}</p>
                             </div>
-                            <button
-                                onClick={() => setSelectedOrder(null)}
-                                style={{
-                                    background: '#f1f5f9',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    padding: '0.5rem',
-                                    borderRadius: '6px',
-                                    color: '#64748b',
-                                    transition: 'all 0.2s'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.background = '#e2e8f0';
-                                    e.currentTarget.style.color = '#475569';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.background = '#f1f5f9';
-                                    e.currentTarget.style.color = '#64748b';
-                                }}
-                            >
-                                <X size={24} />
+                            <button type="button" className="admin-modal__close" onClick={() => setSelectedOrder(null)}>
+                                <X size={20} />
                             </button>
                         </div>
-                        <div style={{ padding: '1.5rem', color: '#1e293b' }}>
-                            {/* Customer Details */}
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <h3 style={{ margin: '0 0 0.75rem', fontSize: '1rem', fontWeight: 600, color: '#0f172a' }}>Customer Details</h3>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-                                    <div>
-                                        <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Name</p>
-                                        <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>{selectedOrder.user?.name || 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                        <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Email</p>
-                                        <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>{selectedOrder.user?.email || 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                        <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Phone</p>
-                                        <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>{selectedOrder.user?.phone || 'N/A'}</p>
-                                    </div>
-                                </div>
-                                <div style={{ marginTop: '0.75rem' }}>
-                                    <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Shipping Address</p>
-                                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>{selectedOrder.shipping_address || 'N/A'}</p>
-                                </div>
-                            </div>
 
-                            {/* Order Items */}
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <h3 style={{ margin: '0 0 0.75rem', fontSize: '1rem', fontWeight: 600, color: '#0f172a' }}>Order Items</h3>
+                        <div className="admin-modal__body">
+                            <section className="admin-modal__section">
+                                <h3>Customer details</h3>
+                                <div className="admin-modal__grid">
+                                    <div>
+                                        <span>Name</span>
+                                        <strong>{selectedOrder.user?.name || 'N/A'}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Email</span>
+                                        <strong>{selectedOrder.user?.email || 'N/A'}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Phone</span>
+                                        <strong>{selectedOrder.user?.phone || 'N/A'}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Shipping address</span>
+                                        <strong>{selectedOrder.shipping_address || 'N/A'}</strong>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="admin-modal__section">
+                                <h3>Order items</h3>
                                 {Array.isArray(selectedOrder.items) && selectedOrder.items.length > 0 ? (
-                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                        <thead>
-                                            <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
-                                                <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Product</th>
-                                                <th style={{ padding: '0.75rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Qty</th>
-                                                <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Price</th>
-                                                <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Subtotal</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {selectedOrder.items.map((item) => (
-                                                <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                                    <td style={{ padding: '0.75rem', fontWeight: 500, color: '#1e293b' }}>{item.product?.name || 'Unknown'}</td>
-                                                    <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 600, color: '#1e293b' }}>{item.quantity}</td>
-                                                    <td style={{ padding: '0.75rem', textAlign: 'right', color: '#1e293b' }}>{formatCurrency(item.unit_price)}</td>
-                                                    <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 600, color: '#059669' }}>{formatCurrency(item.subtotal)}</td>
+                                    <div className="admin-table-shell">
+                                        <table className="admin-data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Product</th>
+                                                    <th>Qty</th>
+                                                    <th>Unit price</th>
+                                                    <th>Subtotal</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                {selectedOrder.items.map((item) => (
+                                                    <tr key={item.id}>
+                                                        <td>{item.product?.name || 'Unknown product'}</td>
+                                                        <td>{item.quantity}</td>
+                                                        <td>{currencyFormatter.format(Number(item.unit_price || 0))}</td>
+                                                        <td>{currencyFormatter.format(Number(item.subtotal || 0))}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 ) : (
-                                    <p style={{ color: '#64748b', margin: 0 }}>No items found</p>
+                                    <p className="admin-note">No items were found for this order.</p>
                                 )}
-                            </div>
+                            </section>
 
-                            {/* Payment & Totals */}
-                            <div>
-                                <h3 style={{ margin: '0 0 0.75rem', fontSize: '1rem', fontWeight: 600, color: '#0f172a' }}>Payment & Totals</h3>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
+                            <section className="admin-modal__section">
+                                <h3>Payment and fulfillment</h3>
+                                <div className="admin-modal__grid">
                                     <div>
-                                        <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Payment Method</p>
-                                        <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>{selectedOrder.payment_method || 'N/A'}</p>
+                                        <span>Payment method</span>
+                                        <strong>{selectedOrder.payment_method || 'N/A'}</strong>
                                     </div>
                                     <div>
-                                        <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Payment Status</p>
-                                        <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>{selectedOrder.payment_status || 'N/A'}</p>
+                                        <span>Payment status</span>
+                                        <strong>{selectedOrder.payment_status || 'N/A'}</strong>
                                     </div>
                                     <div>
-                                        <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>Total Amount</p>
-                                        <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#059669' }}>{formatCurrency(selectedOrder.total_amount || selectedOrder.total)}</p>
+                                        <span>Tracking number</span>
+                                        <strong>{selectedOrder.tracking_number || 'Pending'}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Total amount</span>
+                                        <strong>{currencyFormatter.format(Number(selectedOrder.total_amount || selectedOrder.total || 0))}</strong>
                                     </div>
                                 </div>
-                            </div>
+                            </section>
                         </div>
                     </div>
                 </div>
-            )}
+            ) : null}
         </>
     );
 }

@@ -21,7 +21,7 @@ export default function ForgotPassword() {
 
             if (fallbackLink) {
                 setResetLink(fallbackLink);
-                setSuccess('Email delivery is unavailable right now. Use the reset link below.');
+                setSuccess('Email delivery failed. Use the reset link below for now.');
             } else {
                 setSuccess('Password reset link has been sent to your email. Please check your inbox.');
             }
@@ -71,7 +71,7 @@ export default function ForgotPassword() {
                                     Open Password Reset
                                 </a>
                                 <div style={{ color: '#64748b', fontSize: 13, marginTop: 10 }}>
-                                    This link is shown only in development mode for local testing.
+                                    This fallback link is shown only because the email could not be delivered.
                                 </div>
                             </div>
                         )}

@@ -8,6 +8,8 @@ use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\AdminController;
 use App\Http\Controllers\API\CustomerConcernController;
+use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\PromoCodeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +41,10 @@ Route::middleware('local.auth')->group(function () {
     Route::post('/auth/change-password', 'App\\Http\\Controllers\\API\\AuthController@changePassword');
     Route::get('/customer-concerns', [CustomerConcernController::class, 'index']);
     Route::post('/customer-concerns', [CustomerConcernController::class, 'store']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::patch('/notifications/{notificationId}/read', [NotificationController::class, 'markRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::post('/promo-codes/validate', [PromoCodeController::class, 'validateForCheckout']);
 });
 
 // Product Routes (Public)
@@ -86,6 +92,8 @@ Route::middleware(['local.auth', 'admin'])->group(function () {
     Route::get('/admin/users', [AdminController::class, 'users']);
     Route::delete('/admin/users', [AdminController::class, 'deleteUser']);
     Route::patch('/admin/users/{id}/toggle', [AdminController::class, 'toggleUser']);
+    Route::post('/admin/users/{id}/notify', [AdminController::class, 'notifyUser']);
+    Route::post('/admin/users/{id}/promo-code', [AdminController::class, 'sendPromoCode']);
     
     // Product Management
     Route::get('/admin/products', [AdminController::class, 'products']);

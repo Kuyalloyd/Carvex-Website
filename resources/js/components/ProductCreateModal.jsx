@@ -112,7 +112,6 @@ export default function ProductCreateModal({ isOpen, onClose, onSuccess }) {
             // Prepare form data with image upload
             const submitData = new FormData();
             submitData.append('name', formData.name.trim());
-            submitData.append('sku', `PRD-${Date.now()}`);
             submitData.append('category_id', parseInt(formData.category_id));
             submitData.append('description', formData.description.trim());
             submitData.append('price', parseFloat(formData.price));

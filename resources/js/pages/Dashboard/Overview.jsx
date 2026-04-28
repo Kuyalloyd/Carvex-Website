@@ -167,6 +167,25 @@ export default function Overview() {
                             <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748b' }}>Dashboard</p>
                         </div>
                     </Link>
+
+                    <Link to="/dashboard/support" style={{ textDecoration: 'none', display: 'block' }}>
+                        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', textAlign: 'center', cursor: 'pointer', transition: 'all 160ms ease', boxShadow: '0 2px 8px rgba(15, 23, 42, 0.06)' }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = '#f97316';
+                                e.currentTarget.style.boxShadow = '0 8px 16px rgba(249, 115, 22, 0.15)';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = '#e2e8f0';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(15, 23, 42, 0.06)';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                            }}
+                        >
+                            <MessageSquare size={24} color="#f97316" style={{ marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
+                            <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>Support</p>
+                            <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748b' }}>Message admin</p>
+                        </div>
+                    </Link>
                 </div>
             </div>
 
@@ -178,9 +197,25 @@ export default function Overview() {
                 <p style={{ margin: '0 0 16px', fontSize: '14px', color: '#64748b', lineHeight: 1.6 }}>
                     Have questions about your orders or account? Our support team is here to help you 24/7.
                 </p>
-                <button style={{ background: 'linear-gradient(180deg, #fb923c 0%, #f97316 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)' }}>
+                <Link
+                    to="/dashboard/support"
+                    style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'linear-gradient(180deg, #fb923c 0%, #f97316 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '10px',
+                        padding: '10px 18px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)',
+                    }}
+                >
                     Contact Support
-                </button>
+                </Link>
             </div>
         </div>
     );

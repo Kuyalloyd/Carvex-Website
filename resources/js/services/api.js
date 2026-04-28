@@ -4,6 +4,14 @@ const resolveApiBaseUrl = () => {
     const envBaseUrl = String(process.env.MIX_API_BASE_URL || '').trim();
     const currentHost = String(window.location.hostname || '').trim().toLowerCase();
     const isLoopbackHost = (host) => host === 'localhost' || host === '127.0.0.1';
+    const isLocalDevHost = isLoopbackHost(currentHost);
+    const currentPort = String(window.location.port || '');
+
+    // When the app is already loaded from loopback on port 8000, keep API
+    // calls on the same origin to avoid localhost/127.0.0.1 mismatches.
+    if (isLocalDevHost && currentPort === '8000') {
+        return `${window.location.origin}/api`;
+    }
 
     if (envBaseUrl) {
         try {
@@ -20,10 +28,7 @@ const resolveApiBaseUrl = () => {
         }
     }
 
-    const isLocalDevHost = isLoopbackHost(currentHost);
-
     if (isLocalDevHost) {
-        const currentPort = String(window.location.port || '');
         if (currentPort !== '8000') {
             return `${window.location.protocol}//${currentHost}:8000/api`;
         }

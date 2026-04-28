@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomerConcern;
+use App\Models\User;
+use App\Notifications\AdminConcernReplyNotification;
 use Illuminate\Http\Request;
 
 class CustomerConcernController extends Controller
@@ -30,7 +32,8 @@ class CustomerConcernController extends Controller
                 $builder->where('name', 'like', '%' . $search . '%')
                     ->orWhere('email', 'like', '%' . $search . '%')
                     ->orWhere('subject', 'like', '%' . $search . '%')
-                    ->orWhere('message', 'like', '%' . $search . '%');
+                    ->orWhere('message', 'like', '%' . $search . '%')
+                    ->orWhere('admin_reply', 'like', '%' . $search . '%');
             });
         }
 
@@ -95,22 +98,32 @@ class CustomerConcernController extends Controller
             return response()->json(['message' => 'Concern not found'], 404);
         }
 
+        $previousReply = trim((string) $concern->admin_reply);
         $payload = [
             'status' => $validated['status'],
         ];
+        $shouldNotifyCustomer = false;
 
         if (array_key_exists('admin_reply', $validated)) {
-            $payload['admin_reply'] = $validated['admin_reply'];
-            if (!empty($validated['admin_reply'])) {
-                $payload['replied_at'] = now();
-            }
+            $reply = trim((string) ($validated['admin_reply'] ?? ''));
+            $payload['admin_reply'] = $reply !== '' ? $reply : null;
+            $payload['replied_at'] = $reply !== '' ? now() : null;
+            $shouldNotifyCustomer = $reply !== '' && $reply !== $previousReply;
         }
 
         $concern->update($payload);
+        $updatedConcern = $concern->fresh();
+
+        if ($shouldNotifyCustomer) {
+            $recipient = User::find($concern->user_id);
+            if ($recipient && (!method_exists($recipient, 'isAdmin') || !$recipient->isAdmin())) {
+                $recipient->notify(new AdminConcernReplyNotification($updatedConcern));
+            }
+        }
 
         return response()->json([
             'message' => 'Concern updated successfully',
-            'data' => $concern->fresh(),
+            'data' => $updatedConcern,
         ]);
     }
 }

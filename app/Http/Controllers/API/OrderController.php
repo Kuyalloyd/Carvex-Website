@@ -7,6 +7,8 @@ use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\PromoCode;
+use App\Notifications\OrderPlacedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -116,6 +118,7 @@ class OrderController extends Controller
 
         $validated = $request->validate([
             'payment_method' => 'required|in:cod,gcash,card,bank_transfer',
+            'promo_code' => 'nullable|string|max:50',
             'shipping_address' => 'required|string|max:1000',
             'shipping_city' => 'nullable|string|max:255',
             'shipping_province' => 'nullable|string|max:255',
@@ -193,14 +196,37 @@ class OrderController extends Controller
         }
 
         $subtotal = round($subtotal, 2);
-        $tax = round($subtotal * 0.10, 2);
+        $normalizedPromoCode = strtoupper(trim((string) ($validated['promo_code'] ?? '')));
+        $promoCodeRecord = null;
+        $discountAmount = 0.0;
+
+        if ($normalizedPromoCode !== '') {
+            $promoCodeRecord = PromoCode::query()
+                ->where('code', $normalizedPromoCode)
+                ->first();
+
+            if (!$promoCodeRecord) {
+                return response()->json(['message' => 'Promo code not found.'], 404);
+            }
+
+            $promoError = $promoCodeRecord->canBeUsedBy($user, $subtotal);
+            if ($promoError !== null) {
+                return response()->json(['message' => $promoError], 422);
+            }
+
+            $discountAmount = round($promoCodeRecord->calculateDiscount($subtotal), 2);
+        }
+
+        $discountedSubtotal = max(0, round($subtotal - $discountAmount, 2));
+        $tax = round($discountedSubtotal * 0.10, 2);
         $shipping = $cartItems->isNotEmpty() ? 50.00 : 0.00;
-        $total = round($subtotal + $tax + $shipping, 2);
+        $total = round($discountedSubtotal + $tax + $shipping, 2);
 
         try {
-            $order = DB::transaction(function () use ($user, $validated, $cartItems, $tax, $shipping, $total) {
+            $order = DB::transaction(function () use ($user, $validated, $cartItems, $tax, $shipping, $total, $normalizedPromoCode, $discountAmount) {
                 $productIds = $cartItems->pluck('product_id')->all();
                 $products = Product::whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
+                $promoCodeRecord = null;
 
                 foreach ($cartItems as $item) {
                     $product = $products->get((int) $item->product_id);
@@ -218,6 +244,25 @@ class OrderController extends Controller
                     $product->decrement('stock', (int) $item->quantity);
                 }
 
+                if ($normalizedPromoCode !== '') {
+                    $promoCodeRecord = PromoCode::query()
+                        ->where('code', $normalizedPromoCode)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$promoCodeRecord) {
+                        throw new HttpException(404, 'Promo code not found.');
+                    }
+
+                    $promoError = $promoCodeRecord->canBeUsedBy($user, (float) collect($cartItems)->sum(function ($item) {
+                        return (float) ($item->product->price ?? 0) * (int) $item->quantity;
+                    }));
+
+                    if ($promoError !== null) {
+                        throw new HttpException(422, $promoError);
+                    }
+                }
+
                 $paymentStatus = $validated['payment_method'] === 'cod' ? 'pending' : 'pending';
 
                 $order = Order::create([
@@ -226,10 +271,12 @@ class OrderController extends Controller
                     'status' => 'processing',
                     'payment_method' => $validated['payment_method'],
                     'payment_status' => $paymentStatus,
+                    'promo_code' => $normalizedPromoCode !== '' ? $normalizedPromoCode : null,
                     'payment_details' => $validated['payment_details'] ?? null,
                     'total_amount' => $total,
                     'tax_amount' => $tax,
                     'shipping_amount' => $shipping,
+                    'discount_amount' => $discountAmount,
                     'shipping_address' => $validated['shipping_address'],
                     'shipping_city' => $validated['shipping_city'] ?? null,
                     'shipping_province' => $validated['shipping_province'] ?? null,
@@ -256,6 +303,14 @@ class OrderController extends Controller
                 OrderItem::insert($orderItems);
                 CartItem::where('user_id', $user->id)->delete();
 
+                if ($promoCodeRecord) {
+                    $newUsedCount = (int) $promoCodeRecord->used_count + 1;
+                    $promoCodeRecord->forceFill([
+                        'used_count' => $newUsedCount,
+                        'is_active' => $newUsedCount < (int) $promoCodeRecord->max_uses,
+                    ])->save();
+                }
+
                 return $order->load(['items.product.category']);
             });
         } catch (HttpException $exception) {
@@ -271,6 +326,8 @@ class OrderController extends Controller
 
             return response()->json($response, $exception->getStatusCode());
         }
+
+        $user->notify(new OrderPlacedNotification($order));
 
         Log::info('Order created successfully', [
             'user_id' => $user->id,

@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import orderService from '../services/orderService';
 import { Lock, Truck, CreditCard, Tag, CheckCircle, X } from 'lucide-react';
 
-export default function Checkout() {
+const currencyFormatter = new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+
+const formatCurrency = (value) => currencyFormatter.format(Number(value || 0));
+
+export default function Checkout({ mode = 'page', onClose, onSuccess, initialPromoCode = '' }) {
     const { cartItems, cartSummary, clearCart } = useCart();
     const { user } = useAuth();
     const [firstName, setFirstName] = useState(() => (user?.name || '').split(' ').slice(0, 1).join(''));
@@ -17,9 +26,13 @@ export default function Checkout() {
     const [shippingZip, setShippingZip] = useState(user?.postal_code || '');
     const [paymentMethod, setPaymentMethod] = useState('cod');
     const [loading, setLoading] = useState(false);
-    const [promoCode, setPromoCode] = useState('');
+    const [promoCode, setPromoCode] = useState(() => String(initialPromoCode || '').toUpperCase());
+    const [appliedPromo, setAppliedPromo] = useState(null);
+    const [promoFeedback, setPromoFeedback] = useState({ type: '', message: '' });
+    const [applyingPromo, setApplyingPromo] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [placedOrderNumber, setPlacedOrderNumber] = useState('');
     const [gcashName, setGcashName] = useState('');
     const [gcashMobile, setGcashMobile] = useState('');
     const [cardNumber, setCardNumber] = useState('');
@@ -27,20 +40,98 @@ export default function Checkout() {
     const [cardCvv, setCardCvv] = useState('');
     const [cardBank, setCardBank] = useState('');
     const navigate = useNavigate();
+    const isModal = mode === 'modal';
+    const normalizedPromoCode = String(promoCode || '').trim().toUpperCase();
+    const promoDiscount = Number(appliedPromo?.discount_amount || 0);
+    const subtotalAmount = Number(cartSummary?.subtotal || 0);
+    const shippingAmount = Number(cartSummary?.shipping || 0);
+    const discountedSubtotal = Math.max(0, subtotalAmount - promoDiscount);
+    const previewTaxAmount = discountedSubtotal * 0.1;
+    const previewTotalAmount = discountedSubtotal + previewTaxAmount + shippingAmount;
+
+    const requestItems = useMemo(() => cartItems.map((item) => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+    })), [cartItems]);
+
+    useEffect(() => {
+        if (!isModal) {
+            return undefined;
+        }
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape' && !loading && typeof onClose === 'function') {
+                onClose();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isModal, loading, onClose]);
+
+    useEffect(() => {
+        const nextCode = String(initialPromoCode || '').trim().toUpperCase();
+        if (!nextCode) {
+            return;
+        }
+
+        setPromoCode(nextCode);
+    }, [initialPromoCode]);
+
+    const applyPromoCode = async (codeToApply = normalizedPromoCode) => {
+        const nextCode = String(codeToApply || '').trim().toUpperCase();
+
+        if (!nextCode) {
+            setAppliedPromo(null);
+            setPromoFeedback({ type: 'error', message: 'Enter a promo code first.' });
+            return false;
+        }
+
+        try {
+            setApplyingPromo(true);
+            const response = await orderService.validatePromoCode({
+                code: nextCode,
+                items: requestItems,
+            });
+
+            const promoData = response.data?.data || null;
+            setPromoCode(nextCode);
+            setAppliedPromo(promoData);
+            setPromoFeedback({
+                type: 'success',
+                message: promoData?.discount_amount > 0
+                    ? `${nextCode} applied successfully.`
+                    : 'Promo code applied successfully.',
+            });
+            return true;
+        } catch (error) {
+            setAppliedPromo(null);
+            setPromoFeedback({
+                type: 'error',
+                message: error?.response?.data?.message || 'Promo code could not be applied.',
+            });
+            return false;
+        } finally {
+            setApplyingPromo(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const items = cartItems.map((item) => ({
-                product_id: item.product_id,
-                quantity: item.quantity,
-            }));
+            if (normalizedPromoCode && (!appliedPromo || String(appliedPromo.code || '').toUpperCase() !== normalizedPromoCode)) {
+                const promoApplied = await applyPromoCode(normalizedPromoCode);
+                if (!promoApplied) {
+                    return;
+                }
+            }
 
-            await orderService.createOrder({
-                items,
+            const response = await orderService.createOrder({
+                items: requestItems,
                 payment_method: paymentMethod,
+                promo_code: normalizedPromoCode || null,
                 shipping_address: shippingAddress,
                 shipping_city: shippingCity,
                 shipping_region: shippingRegion,
@@ -48,25 +139,37 @@ export default function Checkout() {
             });
 
             await clearCart();
+            setPlacedOrderNumber(response.data?.data?.order_number || '');
+            window.dispatchEvent(new CustomEvent('customer-notifications-refresh'));
             setShowSuccessModal(true);
         } catch (err) {
-            alert('Failed to place order');
+            alert(err?.response?.data?.message || 'Failed to place order');
         } finally {
             setLoading(false);
         }
     };
 
-    return (
-        <div className="checkout-container">
-            {/* Header */}
+    const handleSuccessClose = () => {
+        setShowSuccessModal(false);
+
+        if (typeof onSuccess === 'function') {
+            onSuccess();
+            return;
+        }
+
+        navigate('/dashboard/orders');
+    };
+
+    const checkoutBody = (
+        <div className={`checkout-container${isModal ? ' checkout-container--modal' : ''}`}>
             <div className="checkout-header">
                 <h1 className="checkout-title">Checkout</h1>
                 <p className="checkout-subtitle">Complete your purchase</p>
             </div>
 
             <div className="checkout-content">
-                {showSuccessModal && <SuccessModal onClose={() => navigate('/dashboard/orders')} />}
-                {showPaymentModal && (
+                {showSuccessModal ? <SuccessModal onClose={handleSuccessClose} orderNumber={placedOrderNumber} /> : null}
+                {showPaymentModal ? (
                     <PaymentModal
                         paymentMethod={paymentMethod}
                         onClose={() => {
@@ -87,18 +190,17 @@ export default function Checkout() {
                         cardBank={cardBank}
                         setCardBank={setCardBank}
                     />
-                )}
+                ) : null}
+
                 <div className="checkout-grid">
-                    {/* Checkout Form */}
                     <div className="checkout-form-col">
                         <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-                            {/* Shipping Address */}
                             <div className="checkout-section">
                                 <div className="checkout-section-header">
                                     <Truck size={24} className="checkout-icon" />
                                     <h2 className="checkout-section-title">Shipping Address</h2>
                                 </div>
-                                
+
                                 <div className="checkout-form-group">
                                     <div className="checkout-form-row">
                                         <input
@@ -147,7 +249,6 @@ export default function Checkout() {
                                         required
                                     />
 
-                                    {/* Region Selection */}
                                     <div className="checkout-form-row">
                                         <select
                                             value={shippingRegion}
@@ -200,13 +301,12 @@ export default function Checkout() {
                                 </div>
                             </div>
 
-                            {/* Payment Method */}
                             <div className="checkout-section">
                                 <div className="checkout-section-header">
                                     <CreditCard size={24} className="checkout-icon" />
                                     <h2 className="checkout-section-title">Payment Method</h2>
                                 </div>
-                                
+
                                 <div className="checkout-payment-options">
                                     {['cod', 'gcash', 'card'].map((method) => (
                                         <label
@@ -229,15 +329,14 @@ export default function Checkout() {
                                                 {method === 'cod'
                                                     ? 'Cash on Delivery'
                                                     : method === 'gcash'
-                                                    ? 'GCash'
-                                                    : 'Credit Card'}
+                                                        ? 'GCash'
+                                                        : 'Credit Card'}
                                             </span>
                                         </label>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Promo Code */}
                             <div className="checkout-section promo-section">
                                 <div className="checkout-section-header">
                                     <Tag size={22} className="checkout-icon" />
@@ -248,19 +347,43 @@ export default function Checkout() {
                                         type="text"
                                         placeholder="Enter promo code"
                                         value={promoCode}
-                                        onChange={(e) => setPromoCode(e.target.value)}
+                                        onChange={(e) => {
+                                            const nextValue = e.target.value.toUpperCase();
+                                            setPromoCode(nextValue);
+
+                                            if (appliedPromo && String(appliedPromo.code || '').toUpperCase() !== nextValue.trim().toUpperCase()) {
+                                                setAppliedPromo(null);
+                                            }
+
+                                            if (promoFeedback.type) {
+                                                setPromoFeedback({ type: '', message: '' });
+                                            }
+                                        }}
                                         className="checkout-input promo-input"
                                     />
                                     <button
                                         type="button"
                                         className="checkout-btn-promo"
+                                        disabled={applyingPromo}
+                                        onClick={() => {
+                                            void applyPromoCode();
+                                        }}
                                     >
-                                        Apply
+                                        {applyingPromo ? 'Applying...' : 'Apply'}
                                     </button>
                                 </div>
+                                {promoFeedback.message ? (
+                                    <p style={{
+                                        margin: '0.75rem 0 0',
+                                        fontSize: '0.9rem',
+                                        fontWeight: 600,
+                                        color: promoFeedback.type === 'error' ? '#dc2626' : '#16a34a',
+                                    }}>
+                                        {promoFeedback.message}
+                                    </p>
+                                ) : null}
                             </div>
 
-                            {/* Place Order Button */}
                             <button
                                 type="submit"
                                 disabled={loading}
@@ -272,12 +395,10 @@ export default function Checkout() {
                         </form>
                     </div>
 
-                    {/* Order Summary */}
                     <div className="checkout-summary-col">
                         <div className="checkout-summary-card">
                             <h2 className="checkout-summary-title">Order Summary</h2>
 
-                            {/* Items */}
                             <div className="checkout-summary-items">
                                 {cartItems.map((item) => (
                                     <div key={item.id} className="checkout-summary-item">
@@ -285,38 +406,44 @@ export default function Checkout() {
                                             {item.product?.name} x{item.quantity}
                                         </span>
                                         <span className="checkout-item-price">
-                                            ₱{(item.product?.price * item.quantity)?.toFixed(2)}
+                                            {formatCurrency((item.product?.price || 0) * item.quantity)}
                                         </span>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Totals */}
                             <div className="checkout-summary-totals">
                                 <div className="checkout-total-row">
                                     <span>Subtotal</span>
-                                    <span>₱{cartSummary?.subtotal?.toFixed(2)}</span>
+                                    <span>{formatCurrency(subtotalAmount)}</span>
                                 </div>
-                                
+
+                                {promoDiscount > 0 ? (
+                                    <div className="checkout-total-row">
+                                        <span>Promo discount {appliedPromo?.code ? `(${appliedPromo.code})` : ''}</span>
+                                        <span style={{ color: '#16a34a' }}>- {formatCurrency(promoDiscount)}</span>
+                                    </div>
+                                ) : null}
+
                                 <div className="checkout-total-row">
                                     <span>Shipping</span>
                                     <span className="checkout-shipping">
-                                        {(cartSummary?.shipping || 0) === 0
+                                        {shippingAmount === 0
                                             ? 'FREE'
-                                            : `₱${cartSummary?.shipping?.toFixed(2)}`}
+                                            : formatCurrency(shippingAmount)}
                                     </span>
                                 </div>
-                                
+
                                 <div className="checkout-total-row">
                                     <span>Tax</span>
-                                    <span>₱{cartSummary?.tax?.toFixed(2)}</span>
+                                    <span>{formatCurrency(previewTaxAmount)}</span>
                                 </div>
                             </div>
 
                             <div className="checkout-grand-total">
                                 <span>Total</span>
                                 <span className="checkout-total-amount">
-                                    ₱{cartSummary?.total?.toFixed(2)}
+                                    {formatCurrency(previewTotalAmount)}
                                 </span>
                             </div>
 
@@ -331,9 +458,51 @@ export default function Checkout() {
             </div>
         </div>
     );
+
+    if (isModal) {
+        return (
+            <div className="checkout-flow-modal" role="dialog" aria-modal="true" aria-label="Checkout">
+                <button
+                    type="button"
+                    className="checkout-flow-modal__backdrop"
+                    onClick={() => {
+                        if (!loading && typeof onClose === 'function') {
+                            onClose();
+                        }
+                    }}
+                    aria-label="Close checkout"
+                />
+                <div className="checkout-flow-modal__panel" onClick={(event) => event.stopPropagation()}>
+                    <div className="checkout-flow-modal__header">
+                        <div>
+                            <h2>Checkout</h2>
+                            <p>Complete your purchase without leaving the customer panel.</p>
+                        </div>
+                        <button
+                            type="button"
+                            className="checkout-flow-modal__close"
+                            onClick={() => {
+                                if (!loading && typeof onClose === 'function') {
+                                    onClose();
+                                }
+                            }}
+                            aria-label="Close checkout"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
+                    <div className="checkout-flow-modal__body">
+                        {checkoutBody}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return checkoutBody;
 }
 
-function SuccessModal({ onClose }) {
+function SuccessModal({ onClose, orderNumber }) {
     return (
         <div style={{
             position: 'fixed',
@@ -342,7 +511,7 @@ function SuccessModal({ onClose }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1000,
+            zIndex: 1500,
             padding: '1rem'
         }}>
             <div style={{
@@ -367,7 +536,7 @@ function SuccessModal({ onClose }) {
                 }}>
                     <CheckCircle size={36} color="#16a34a" />
                 </div>
-                
+
                 <h2 style={{
                     margin: 0,
                     fontSize: '1.5rem',
@@ -375,18 +544,18 @@ function SuccessModal({ onClose }) {
                     color: '#0f172a',
                     marginBottom: '0.75rem'
                 }}>
-                    Order Placed Successfully!
+                    Checkout Successful
                 </h2>
-                
+
                 <p style={{
                     margin: 0,
                     color: '#64748b',
                     marginBottom: '1.5rem',
                     lineHeight: 1.6
                 }}>
-                    Thank you for your purchase. We'll process your order soon.
+                    Thank you for your purchase. {orderNumber ? `${orderNumber} is now in processing.` : `We'll process your order soon.`} A confirmation was also sent to your notifications.
                 </p>
-                
+
                 <button
                     onClick={onClose}
                     style={{
@@ -401,7 +570,7 @@ function SuccessModal({ onClose }) {
                         width: '100%'
                     }}
                 >
-                    View My Orders
+                    View My Purchases
                 </button>
             </div>
         </div>
@@ -472,7 +641,7 @@ function PaymentModal({ paymentMethod, onClose, onSubmit, gcashName, setGcashNam
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1000,
+            zIndex: 1500,
             padding: '1rem'
         }}>
             <div style={{

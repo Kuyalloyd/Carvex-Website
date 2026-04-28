@@ -13,6 +13,12 @@ const adminService = {
     toggleUserStatus: (userId, config) =>
         api.patch(`/admin/users/${userId}/toggle`, {}, { timeout: 12000, ...config }),
 
+    notifyUser: (userId, data, config) =>
+        api.post(`/admin/users/${userId}/notify`, data, { timeout: 12000, ...config }),
+
+    sendPromoCode: (userId, data, config) =>
+        api.post(`/admin/users/${userId}/promo-code`, data, { timeout: 12000, ...config }),
+
     getProducts: (config) =>
         api.get('/admin/products', { timeout: 12000, ...config }),
 

@@ -55,10 +55,6 @@ export default function AdminProductCreate() {
                 setError('Product name is required');
                 return;
             }
-            if (!formData.sku.trim()) {
-                setError('SKU is required');
-                return;
-            }
             if (!formData.category_id) {
                 setError('Category is required');
                 return;
@@ -75,7 +71,6 @@ export default function AdminProductCreate() {
             // Prepare data for submission
             const submitData = {
                 name: formData.name.trim(),
-                sku: formData.sku.trim(),
                 category_id: parseInt(formData.category_id),
                 description: formData.description.trim(),
                 price: parseFloat(formData.price),
@@ -83,6 +78,10 @@ export default function AdminProductCreate() {
                 vehicle_compatibility: formData.vehicle_compatibility.trim(),
                 is_active: formData.is_active
             };
+
+            if (formData.sku.trim()) {
+                submitData.sku = formData.sku.trim();
+            }
 
             // Add images if provided
             if (formData.images.trim()) {
@@ -185,14 +184,14 @@ export default function AdminProductCreate() {
 
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.95rem' }}>
-                                        SKU <span style={{ color: '#dc2626' }}>*</span>
+                                        SKU
                                     </label>
                                     <input
                                         type="text"
                                         name="sku"
                                         value={formData.sku}
                                         onChange={handleChange}
-                                        placeholder="e.g., TF-12345"
+                                        placeholder="Leave blank to auto-generate"
                                         style={{
                                             width: '100%',
                                             padding: '0.75rem',

@@ -13,7 +13,7 @@ export const authService = {
                 ...data,
                 redirect_to: `${window.location.origin}/reset-password`,
             },
-            { timeout: 8000, ...config }
+            { timeout: 20000, ...config }
         ),
     
     resetPassword: (data, config) =>
